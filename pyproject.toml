@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "project_empathy"
+version = "0.1.0"
+description = "Automated pipeline for empathetic analysis of Malaysian news articles"
+readme = "README.md"
+authors = [{name = "Project Empathy"}]
+license = {file = "LICENSE"}
+requires-python = ">=3.10"
+dependencies = [
+    "requests",
+    "beautifulsoup4",
+    "pandas",
+    "scikit-learn",
+    "textblob",
+    "langdetect",
+    "googletrans==4.0.0-rc1",
+    "python-dotenv",
+    "pydantic",
+    "typer[all]",
+    "tqdm",
+    "ratelimit",
+    "tenacity",
+    "pyyaml",
+    "sqlalchemy",
+    "duckdb==0.9.2"
+]
+
+[project.scripts]
+pe = "project_empathy.cli:app"
+
+[tool.setuptools.packages.find]
+where = ["src"]

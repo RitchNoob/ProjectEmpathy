@@ -1,0 +1,44 @@
+storage:
+  database_path: data/empathy.db
+  raw_table: articles_raw
+  clean_table: articles_clean
+  analyzed_table: articles_analyzed
+  data_dir: data
+  outputs_dir: outputs
+
+news:
+  start_date: 2023-01-01
+  end_date: 2023-12-31
+  languages: [en, ms, zh]
+  keywords:
+    - bullying
+    - suicide
+    - homicide
+    - student
+    - school
+    - university
+    - mental health
+  domains:
+    - thestar.com.my
+    - freemalaysiatoday.com
+    - malaymail.com
+    - channelnewsasia.com
+    - bharian.com.my
+    - hmetro.com.my
+    - utusan.com.my
+    - sinchew.com.my
+    - chinapress.com.my
+  request_interval_seconds: 3
+  robots_cache_hours: 12
+
+pipeline:
+  translate_non_english: true
+  tfidf_top_k: 20
+  cooccurrence_window: 2
+  sentiment_time_window: D
+  min_article_length: 500
+  chunk_size: 50
+
+report:
+  title: Project Empathy Report
+  description: Insights on Malaysian student-related harm coverage.
