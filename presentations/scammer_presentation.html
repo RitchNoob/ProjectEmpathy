@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>หนีให้ไกลภัย Scammer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&family=Kanit:wght@400;600;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg-deep: radial-gradient(circle at 20% 20%, #0a1f44 0%, #051024 65%, #010812 100%);
+      --bg-light: radial-gradient(circle at 80% 0%, rgba(80,120,255,0.18) 0%, rgba(14,32,78,0.85) 55%, rgba(8,18,42,0.95) 100%);
+      --accent: #09f1b8;
+      --accent-strong: #ff4f6d;
+      --text-main: #f0f4ff;
+      --text-sub: #9ab6ff;
+      --shadow-soft: 0 25px 65px rgba(0, 0, 0, 0.35);
+      --glass-bg: linear-gradient(135deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.02) 100%);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Sarabun', 'Kanit', sans-serif;
+      background: var(--bg-deep);
+      color: var(--text-main);
+      overflow: hidden;
+    }
+
+    .presentation {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      scroll-snap-type: y mandatory;
+      overflow-y: auto;
+    }
+
+    section.slide {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      padding: clamp(24px, 4vw, 72px);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      background-image: var(--bg-light);
+      scroll-snap-align: start;
+    }
+
+    .nav-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 32px;
+      border-radius: 20px;
+      background: var(--glass-bg);
+      backdrop-filter: blur(18px);
+      box-shadow: var(--shadow-soft);
+      margin-bottom: 32px;
+    }
+
+    .nav-left {
+      font-weight: 700;
+      letter-spacing: 0.24rem;
+      text-transform: uppercase;
+      font-size: clamp(18px, 1.4vw, 26px);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .nav-right {
+      display: flex;
+      gap: 24px;
+      font-weight: 600;
+      font-size: clamp(14px, 1.1vw, 18px);
+    }
+
+    .nav-right span {
+      opacity: 0.75;
+      transition: opacity 0.4s ease;
+      cursor: pointer;
+    }
+
+    .nav-right span:hover {
+      opacity: 1;
+    }
+
+    .slide-content {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: clamp(24px, 3vw, 48px);
+      align-items: center;
+      height: 100%;
+    }
+
+    .card {
+      background: var(--glass-bg);
+      border-radius: 28px;
+      padding: clamp(24px, 3vw, 40px);
+      box-shadow: var(--shadow-soft);
+      border: 1px solid rgba(255,255,255,0.08);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .headline {
+      font-family: 'Kanit', sans-serif;
+      font-size: clamp(32px, 4vw, 66px);
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: 0.02em;
+    }
+
+    .subhead {
+      font-size: clamp(18px, 1.5vw, 24px);
+      color: var(--text-sub);
+      margin-top: 16px;
+      line-height: 1.6;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 24px;
+    }
+
+    .stat-card {
+      padding: 24px;
+      border-radius: 20px;
+      background: linear-gradient(140deg, rgba(23, 54, 116, 0.95), rgba(35, 79, 160, 0.55));
+      border: 1px solid rgba(116,157,255,0.2);
+      box-shadow: var(--shadow-soft);
+    }
+
+    .stat-card h3 {
+      font-size: clamp(18px, 1.4vw, 22px);
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+
+    .stat-card p {
+      font-size: clamp(28px, 3vw, 40px);
+      font-weight: 700;
+    }
+
+    .stat-card small {
+      display: block;
+      margin-top: 8px;
+      color: rgba(255,255,255,0.65);
+    }
+
+    .list-style {
+      list-style: none;
+      display: grid;
+      gap: 16px;
+      font-size: clamp(16px, 1.1vw, 19px);
+    }
+
+    .list-style li {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 12px;
+      align-items: baseline;
+    }
+
+    .list-style span.badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 12px;
+      background: rgba(9, 241, 184, 0.16);
+      color: var(--accent);
+      font-weight: 700;
+      font-size: 18px;
+    }
+
+    .quote-block {
+      position: relative;
+      padding-left: clamp(24px, 2vw, 48px);
+    }
+
+    .quote-block::before {
+      content: '\201C';
+      position: absolute;
+      left: 0;
+      top: -18px;
+      font-size: clamp(72px, 10vw, 120px);
+      color: rgba(9, 241, 184, 0.3);
+    }
+
+    .note-card {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      font-size: clamp(16px, 1.1vw, 19px);
+    }
+
+    .note-card strong {
+      font-size: clamp(20px, 1.6vw, 24px);
+      color: var(--accent);
+    }
+
+    .footer-nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: auto;
+      padding-top: 24px;
+      font-size: clamp(14px, 1.1vw, 18px);
+      color: rgba(255,255,255,0.65);
+    }
+
+    .nav-button {
+      padding: 14px 26px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.18);
+      background: rgba(9, 241, 184, 0.08);
+      color: var(--accent);
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.4s ease, box-shadow 0.4s ease;
+    }
+
+    .nav-button:hover {
+      transform: translateY(-4px) scale(1.02);
+      box-shadow: 0 18px 40px rgba(9, 241, 184, 0.25);
+    }
+
+    .floating-badge {
+      position: absolute;
+      top: clamp(12px, 2vw, 24px);
+      right: clamp(12px, 2vw, 24px);
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 14px;
+      padding: 12px 18px;
+      font-size: clamp(14px, 1vw, 17px);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .floating-badge::before {
+      content: '';
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 12px rgba(9, 241, 184, 0.9);
+    }
+
+    .hero-visual {
+      position: relative;
+      width: 100%;
+      height: clamp(280px, 45vh, 420px);
+      background: radial-gradient(circle at 40% 40%, rgba(30, 189, 255, 0.32), rgba(6, 19, 52, 0.0));
+      border-radius: 32px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      perspective: 1200px;
+    }
+
+    .hero-visual img {
+      width: 75%;
+      max-width: 520px;
+      filter: drop-shadow(0 18px 45px rgba(0,0,0,0.45));
+    }
+
+    .scammer-title {
+      display: flex;
+      gap: clamp(8px, 1.2vw, 18px);
+      justify-content: center;
+      width: 100%;
+      margin: auto;
+      perspective: 900px;
+    }
+
+    .scammer-letter {
+      font-family: 'Kanit', sans-serif;
+      font-weight: 800;
+      font-size: clamp(42px, 12vw, 120px);
+      letter-spacing: 0.08em;
+      color: var(--accent-strong);
+      text-shadow: 0 20px 60px rgba(255, 79, 109, 0.45);
+      transform-origin: center;
+      opacity: 0;
+    }
+
+    .impact-ring {
+      position: absolute;
+      width: 160px;
+      height: 160px;
+      border-radius: 50%;
+      border: 3px solid rgba(255,255,255,0.25);
+      opacity: 0;
+      transform: scale(0.4);
+      filter: blur(0.3px);
+    }
+
+    .context-bar {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 14px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 12px;
+      font-size: clamp(12px, 1vw, 16px);
+    }
+
+    .context-bar svg {
+      width: 22px;
+      height: 22px;
+      fill: var(--accent);
+    }
+
+    .grid-two {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: clamp(24px, 3vw, 48px);
+    }
+
+    .timeline {
+      position: relative;
+      padding-left: 28px;
+      border-left: 2px dashed rgba(255,255,255,0.12);
+      display: grid;
+      gap: 22px;
+    }
+
+    .timeline-item {
+      position: relative;
+      padding-left: 12px;
+    }
+
+    .timeline-item::before {
+      content: '';
+      position: absolute;
+      left: -28px;
+      top: 8px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 18px rgba(9,241,184,0.8);
+    }
+
+    .video-card {
+      background: rgba(7, 20, 49, 0.85);
+      border-radius: 24px;
+      padding: 20px 24px;
+      border: 1px solid rgba(255,255,255,0.08);
+      display: grid;
+      gap: 18px;
+    }
+
+    .footer {
+      padding: 32px;
+      text-align: center;
+      font-size: clamp(15px, 1.1vw, 18px);
+      color: rgba(255,255,255,0.55);
+    }
+
+    .credit {
+      font-size: clamp(12px, 0.9vw, 16px);
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+      background: rgba(0,0,0,0.25);
+      border-radius: 14px;
+    }
+
+    .progress-indicator {
+      position: fixed;
+      right: 32px;
+      top: 50%;
+      transform: translateY(-50%);
+      display: grid;
+      gap: 12px;
+      z-index: 40;
+    }
+
+    .progress-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.25);
+      transition: transform 0.35s ease, background 0.35s ease;
+    }
+
+    .progress-dot.active {
+      background: var(--accent);
+      transform: scale(1.4);
+      box-shadow: 0 0 12px rgba(9,241,184,0.75);
+    }
+
+    @media (max-width: 768px) {
+      .nav-bar {
+        flex-direction: column;
+        gap: 16px;
+        align-items: flex-start;
+      }
+      .nav-right {
+        flex-wrap: wrap;
+      }
+      .hero-visual img {
+        width: 95%;
+      }
+      .presentation {
+        scroll-snap-type: y proximity;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="presentation" id="presentation">
+    <div class="progress-indicator" id="progressIndicator"></div>
+
+    <section class="slide" data-title="intro">
+      <div class="nav-bar">
+        <div class="nav-left">SCAMMER WATCH</div>
+        <div class="nav-right">
+          <span data-target="intro">หน้าแรก</span>
+          <span data-target="definition">คืออะไร</span>
+          <span data-target="victims">เหยื่อ</span>
+          <span data-target="threats">ภัยใกล้ตัว</span>
+          <span data-target="statistics">สถิติ</span>
+          <span data-target="prevention">ป้องกัน</span>
+          <span data-target="case-studies">กรณีศึกษา</span>
+        </div>
+      </div>
+      <div class="slide-content">
+        <div class="card" style="grid-column: span 6; min-height: 60%; display:flex; flex-direction:column; gap:20px; justify-content:center;">
+          <div class="context-bar">
+            <svg viewBox="0 0 24 24"><path d="M2 12C2 6.48 6.48 2 12 2s10 4.48 10 10-4.48 10-10 10S2 17.52 2 12zm11-4h-2v6h6v-2h-4V8z" /></svg>
+            ฉากเปิดแรงบันดาลใจจากข่าวจริง : ขบวนการคอลเซ็นเตอร์ข้ามชาติในกัมพูชา
+          </div>
+          <div class="scammer-title" aria-label="Scammer" id="scammerTitle">
+            <span class="scammer-letter">S</span>
+            <span class="scammer-letter">C</span>
+            <span class="scammer-letter">A</span>
+            <span class="scammer-letter">M</span>
+            <span class="scammer-letter">M</span>
+            <span class="scammer-letter">E</span>
+            <span class="scammer-letter">R</span>
+          </div>
+          <div class="subhead">“หนีให้ไกลภัย Scammer” เผยเบื้องหลังเครือข่ายอาชญากรรมไซเบอร์ที่ลวงคนไทยและนักลงทุนเกาหลีใต้ให้ทำงานหลอกลวงในคอมพาวด์ที่เมืองปอยเปต ประเทศกัมพูชา</div>
+          <div class="note-card">
+            <strong>2024 : Alarm Level Red</strong>
+            <p>สำนักงานตำรวจแห่งชาติไทยเผยว่าในไตรมาส 3 ปี 2567 ยอดแจ้งคดีอาชญากรรมออนไลน์ยังพุ่งสูงต่อเนื่องโดยเฉพาะการหลอกลงทุนสินทรัพย์ดิจิทัลและปล่อยกู้หลอก พร้อมจับมือเกาหลีใต้แลกเปลี่ยนข่าวกรองเพื่อช่วยเหยื่อที่ถูกบังคับทำงานในแก๊งสแกมเมอร์.</p>
+          </div>
+        </div>
+        <div class="hero-visual" style="grid-column: span 6;">
+          <div class="impact-ring" id="impactRing"></div>
+          <img src="https://images.unsplash.com/photo-1584433144859-1fc3ab64a957?auto=format&fit=crop&w=900&q=80" alt="Cybercrime alert" />
+        </div>
+      </div>
+      <div class="footer-nav">
+        <div class="credit">อัปเดตเมื่อ ต.ค. 2567 · แหล่งข่าว : ศปอส.ตร., กระทรวงดิจิทัลฯ, สื่อเกาหลีใต้ Yonhap</div>
+        <button class="nav-button" data-next>เริ่มนำเสนอ</button>
+      </div>
+    </section>
+
+    <section class="slide" data-title="definition" id="definition">
+      <div class="nav-bar">
+        <div class="nav-left">SCAMMER WATCH</div>
+        <div class="nav-right">
+          <span data-target="intro">หน้าแรก</span>
+          <span data-target="definition" class="active">คืออะไร</span>
+          <span data-target="victims">เหยื่อ</span>
+          <span data-target="threats">ภัยใกล้ตัว</span>
+          <span data-target="statistics">สถิติ</span>
+          <span data-target="prevention">ป้องกัน</span>
+          <span data-target="case-studies">กรณีศึกษา</span>
+        </div>
+      </div>
+      <div class="slide-content">
+        <div class="card" style="grid-column: span 5;">
+          <div class="floating-badge">Keyword : Deception-as-a-Service</div>
+          <h1 class="headline">Scammer คือใคร?</h1>
+          <p class="subhead">บุคคลหรือกลุ่มที่สร้างสถานการณ์เท็จทั้งในโลกออนไลน์และออฟไลน์เพื่อชักจูงให้เราโอนเงิน ส่งข้อมูล หรือทำภารกิจบางอย่างเพื่อผลประโยชน์ของพวกเขา โดยอาศัยการเลียนแบบความน่าเชื่อถือของหน่วยงานรัฐ ธนาคาร หรือคนใกล้ตัว</p>
+          <ul class="list-style" style="margin-top: 32px;">
+            <li><span class="badge">1</span><span>ปี 2567 กลุ่มสแกมเมอร์ไทย-กัมพูชาใช้แพลตฟอร์มแชตที่เข้ารหัสและบอต AI เพื่อหลอกคุย ทำให้การติดตามยากขึ้น</span></li>
+            <li><span class="badge">2</span><span>ผู้เสียหายชาวเกาหลีใต้ถูกลวงมาทำงานหลอกลวงในคอมพาวด์ที่เสียมราฐ โดยขู่ทำร้ายหากไม่บรรลุตัวเลขเป้าหมาย</span></li>
+            <li><span class="badge">3</span><span>เครือข่ายมักซ่อนตัวอยู่หลังบริษัทปลอมและใช้บัญชีม้าในไทย ลาว และมาเลเซียเพื่อฟอกเงิน</span></li>
+          </ul>
+        </div>
+        <div class="card" style="grid-column: span 7; display:grid; place-items:center;">
+          <img src="https://images.unsplash.com/photo-1556740749-887f6717d7e4?auto=format&fit=crop&w=1000&q=80" alt="What is scam" style="width: 88%; border-radius: 24px; box-shadow: var(--shadow-soft);" />
+        </div>
+      </div>
+      <div class="footer-nav">
+        <span>รหัสดำเนินการ : TH-INTEL-2024/SCM</span>
+        <button class="nav-button" data-next>สไลด์ถัดไป</button>
+      </div>
+    </section>
+
+    <section class="slide" data-title="victims" id="victims">
+      <div class="nav-bar">
+        <div class="nav-left">SCAMMER WATCH</div>
+        <div class="nav-right">
+          <span data-target="intro">หน้าแรก</span>
+          <span data-target="definition">คืออะไร</span>
+          <span data-target="victims" class="active">เหยื่อ</span>
+          <span data-target="threats">ภัยใกล้ตัว</span>
+          <span data-target="statistics">สถิติ</span>
+          <span data-target="prevention">ป้องกัน</span>
+          <span data-target="case-studies">กรณีศึกษา</span>
+        </div>
+      </div>
+      <div class="slide-content">
+        <div class="card" style="grid-column: span 6;">
+          <h1 class="headline">ใครบ้างที่ถูกเล็ง?</h1>
+          <p class="subhead">ทุกคนที่เชื่อมต่ออินเทอร์เน็ตมีโอกาสตกเป็นเหยื่อ แต่ในปี 2567 กลุ่มต่อไปนี้ถูกจับตาว่าเป็นเป้าหมายหลัก</p>
+          <ul class="list-style" style="margin-top: 32px;">
+            <li><span class="badge">A</span><span>ฟรีแลนซ์สายครีเอทีฟและนักแปลที่รับงานผ่านแพลตฟอร์มต่างประเทศ ถูกหลอกให้ส่งสำเนาพาสปอร์ตและ OTP</span></li>
+            <li><span class="badge">B</span><span>ผู้สูงอายุและผู้ปกครองที่ใช้โซเชียลเพื่อติดตามบุตร ถูกหลอกผ่าน Deepfake เสียงร้องขอความช่วยเหลือ</span></li>
+            <li><span class="badge">C</span><span>นักลงทุนสินทรัพย์ดิจิทัลถูกล่อให้เชื่อมกระเป๋าเงินกับแอปปลอม ผ่านโฆษณา TikTok และ Telegram</span></li>
+            <li><span class="badge">D</span><span>คนหางานต่างชาติในเกาหลีใต้ ถูกเสนองานเงินเดือนสูงในกัมพูชาแต่ถูกยึดหนังสือเดินทาง</span></li>
+          </ul>
+        </div>
+        <div class="card" style="grid-column: span 6;">
+          <div class="grid-two">
+            <div class="stat-card">
+              <h3>ค่าเสียหายเฉลี่ย/คดี</h3>
+              <p>157,000 ฿</p>
+              <small>ข้อมูล: ศูนย์ PCT ตร. ก.ค. 2567</small>
+            </div>
+            <div class="stat-card">
+              <h3>เหยื่ออายุ 50+ ปี</h3>
+              <p>38 %</p>
+              <small>เพิ่มขึ้น 6% จากปี 2566</small>
+            </div>
+            <div class="stat-card">
+              <h3>แรงงานต่างชาติถูกกักขัง</h3>
+              <p>612 คน</p>
+              <small>ร่วมช่วยเหลือไทย-เกาหลีใต้ ณ กัมพูชา</small>
+            </div>
+            <div class="stat-card">
+              <h3>บัญชีม้าใหม่เดือน ส.ค.</h3>
+              <p>7,860 บัญชี</p>
+              <small>เชื่อมโยงแก๊งปลอมสินทรัพย์ดิจิทัล</small>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="footer-nav">
+        <span>เหยื่อคือเราทุกคน จับตาทุกครั้งก่อนคลิก</span>
+        <button class="nav-button" data-next>สไลด์ถัดไป</button>
+      </div>
+    </section>
+
+    <section class="slide" data-title="threats" id="threats">
+      <div class="nav-bar">
+        <div class="nav-left">SCAMMER WATCH</div>
+        <div class="nav-right">
+          <span data-target="intro">หน้าแรก</span>
+          <span data-target="definition">คืออะไร</span>
+          <span data-target="victims">เหยื่อ</span>
+          <span data-target="threats" class="active">ภัยใกล้ตัว</span>
+          <span data-target="statistics">สถิติ</span>
+          <span data-target="prevention">ป้องกัน</span>
+          <span data-target="case-studies">กรณีศึกษา</span>
+        </div>
+      </div>
+      <div class="slide-content">
+        <div class="card" style="grid-column: span 6;">
+          <div class="floating-badge">Framework : S.U.R.G.E.</div>
+          <h1 class="headline">5 อันดับภัยไซเบอร์ใกล้ตัวที่สุด</h1>
+          <div class="timeline" style="margin-top: 24px;">
+            <div class="timeline-item">
+              <h3>Suspicious Social Boost</h3>
+              <p>การรับปั๊มไลก์หรือดูวิดีโอแลกเงิน นำไปสู่การหลอกโอนค่าประกันงาน — ทะลุ 19,400 คดีในไทยปีนี้</p>
+            </div>
+            <div class="timeline-item">
+              <h3>Unusual Banking Request</h3>
+              <p>สวมรอยเป็นธนาคารหรือบริษัทไฟแนนซ์ แจ้งปิดบัญชีบัตรเครดิตแล้วให้โอนเงินเข้าบัญชีใหม่เพื่อ “ตรวจสอบ”</p>
+            </div>
+            <div class="timeline-item">
+              <h3>Romance Lure 2.0</h3>
+              <p>ใช้ AI สร้างใบหน้าและเสียง หยอดความสัมพันธ์แล้วชวนลงทุนคริปโต-ฟอเร็กซ์ในแพลตฟอร์มเงา</p>
+            </div>
+            <div class="timeline-item">
+              <h3>Government Emulation</h3>
+              <p>ปลอมเป็น DSI, ปปง., หรือ ตม. โทรแจ้งคดีฟอกเงิน โดยใช้เอกสารราชการจริงที่ถูกขโมย</p>
+            </div>
+            <div class="timeline-item">
+              <h3>Enterprise Leak-for-Hire</h3>
+              <p>เจาะระบบบัญชีพนักงานแล้วขายสิทธิ์เข้า ERP ให้แก๊งหลอกสั่งซื้อสินค้าเครดิต 30 วัน</p>
+            </div>
+          </div>
+        </div>
+        <div class="card" style="grid-column: span 6; display:flex; flex-direction:column; gap:24px;">
+          <img src="https://images.unsplash.com/photo-1545239351-1141bd82e8a6?auto=format&fit=crop&w=900&q=80" alt="Cyber threats" style="width: 100%; border-radius: 24px;" />
+          <div class="note-card">
+            <strong>ไฮไลต์ข่าว : Yonhap - ส.ค. 2024</strong>
+            <p>ตำรวจไทย-เกาหลีใต้บุกช่วยพลเมืองเกาหลีใต้ 19 รายจากคอมพาวด์ในปอยเปต พบถูกบังคับทำงานหลอกลงทุนกำไรสูง โทรศัพท์ที่ใช้โทรหาเหยื่อถูกตั้งระบบอัตโนมัติให้แจ้งเตือนเมื่อเหยื่อโอนเงิน</p>
+          </div>
+        </div>
+      </div>
+      <div class="footer-nav">
+        <span>รู้ทันภัย = หยุดวงจรโกง</span>
+        <button class="nav-button" data-next>สถิติสำคัญ</button>
+      </div>
+    </section>
+
+    <section class="slide" data-title="statistics" id="statistics">
+      <div class="nav-bar">
+        <div class="nav-left">SCAMMER WATCH</div>
+        <div class="nav-right">
+          <span data-target="intro">หน้าแรก</span>
+          <span data-target="definition">คืออะไร</span>
+          <span data-target="victims">เหยื่อ</span>
+          <span data-target="threats">ภัยใกล้ตัว</span>
+          <span data-target="statistics" class="active">สถิติ</span>
+          <span data-target="prevention">ป้องกัน</span>
+          <span data-target="case-studies">กรณีศึกษา</span>
+        </div>
+      </div>
+      <div class="slide-content">
+        <div class="card" style="grid-column: span 7;">
+          <h1 class="headline">สถิติภัยสแกมเมอร์ไทย (ม.ค. – ก.ย. 2567)</h1>
+          <div class="stats-grid" style="margin-top: 24px;">
+            <div class="stat-card">
+              <h3>ยอดแจ้งคดี</h3>
+              <p>312,488</p>
+              <small>เฉลี่ย 1,143 คดี/วัน</small>
+            </div>
+            <div class="stat-card">
+              <h3>มูลค่าความเสียหายรวม</h3>
+              <p>27,906 ล้านบาท</p>
+              <small>เพิ่มขึ้น 18% จากช่วงเดียวกันปีก่อน</small>
+            </div>
+            <div class="stat-card">
+              <h3>ธุรกรรมที่อายัดสำเร็จ</h3>
+              <p>29,104 ล้านบาท</p>
+              <small>ปฏิบัติการ “ปิดบัญชีม้า” ร่วมธนาคารพาณิชย์</small>
+            </div>
+            <div class="stat-card">
+              <h3>คดีที่เกี่ยวข้องกับคริปโต</h3>
+              <p>21,987</p>
+              <small>สูงสุดในประวัติการณ์</small>
+            </div>
+            <div class="stat-card">
+              <h3>สายด่วน 1441</h3>
+              <p>2.3 นาที</p>
+              <small>เวลาตอบสนองเฉลี่ยหลังรับแจ้ง</small>
+            </div>
+            <div class="stat-card">
+              <h3>สายด่วนเกาหลีใต้ 118</h3>
+              <p>789 เคส</p>
+              <small>ร่วมประสานช่วยเหลือคนไทยในต่างแดน</small>
+            </div>
+          </div>
+        </div>
+        <div class="card" style="grid-column: span 5; display:flex; flex-direction:column; gap:24px;">
+          <h2 style="font-family:'Kanit'; font-size: clamp(20px, 2.2vw, 36px);">ช่องทางแจ้งเหตุทันที</h2>
+          <div class="video-card">
+            <strong>ศูนย์ PCT (ตำรวจไซเบอร์)</strong>
+            <p>โทร 1441 หรือแชต “@thaipoliceonline” บน LINE OA</p>
+          </div>
+          <div class="video-card">
+            <strong>ศูนย์ปราบปรามอาชญากรรมข้ามชาติ</strong>
+            <p>ร่วมกับสถานเอกอัครราชทูตเกาหลีใต้ประจำไทย เปิดช่องทางด่วนผู้เสียหายชาวต่างชาติ</p>
+          </div>
+          <div class="video-card">
+            <strong>ศูนย์ต่อต้านข่าวปลอม</strong>
+            <p>เว็บไซต์ <a href="https://www.antifakenewscenter.com" target="_blank" style="color: var(--accent);">antifakenewscenter.com</a> ตรวจสอบข้อมูลก่อนเชื่อ</p>
+          </div>
+        </div>
+      </div>
+      <div class="footer-nav">
+        <span>ข้อมูลล่าสุดจาก ThaiPoliceOnline (กันยา 2567)</span>
+        <button class="nav-button" data-next>ไปต่อ</button>
+      </div>
+    </section>
+
+    <section class="slide" data-title="prevention" id="prevention">
+      <div class="nav-bar">
+        <div class="nav-left">SCAMMER WATCH</div>
+        <div class="nav-right">
+          <span data-target="intro">หน้าแรก</span>
+          <span data-target="definition">คืออะไร</span>
+          <span data-target="victims">เหยื่อ</span>
+          <span data-target="threats">ภัยใกล้ตัว</span>
+          <span data-target="statistics">สถิติ</span>
+          <span data-target="prevention" class="active">ป้องกัน</span>
+          <span data-target="case-studies">กรณีศึกษา</span>
+        </div>
+      </div>
+      <div class="slide-content">
+        <div class="card" style="grid-column: span 6;">
+          <div class="floating-badge">Checklist : Zero Trust Routine</div>
+          <h1 class="headline">วิธีรับมือและป้องกัน</h1>
+          <div class="grid-two" style="margin-top: 24px;">
+            <div class="note-card">
+              <strong>ก่อนเชื่อ</strong>
+              <ul class="list-style">
+                <li><span class="badge">1</span><span>ตรวจสอบชื่อบัญชี-เบอร์โทรใน <a href="https://www.thaipoliceonline.com" target="_blank" style="color: var(--accent);">thaipoliceonline.com</a></span></li>
+                <li><span class="badge">2</span><span>อย่าแชร์ OTP หรือรหัสยืนยัน แม้คู่สนทนาอ้างว่าเป็นเจ้านายหรือหน่วยงานรัฐ</span></li>
+                <li><span class="badge">3</span><span>หากถูกบังคับให้ติดตั้งแอปนอกสโตร์ ให้ปฏิเสธทันทีและถ่ายภาพหลักฐานไว้แจ้งความ</span></li>
+              </ul>
+            </div>
+            <div class="note-card">
+              <strong>ระหว่างถูกหลอก</strong>
+              <ul class="list-style">
+                <li><span class="badge">4</span><span>ตัดการสื่อสารแล้วโทร 1441 พร้อมจดเลขบัญชี/Line ID/URL ที่เกี่ยวข้อง</span></li>
+                <li><span class="badge">5</span><span>แจ้งธนาคารให้ระงับบัญชีและตรวจสอบธุรกรรมย้อนหลังทันที</span></li>
+                <li><span class="badge">6</span><span>สำรองหลักฐานดิจิทัล เช่น แชต สลิป คำสั่งโอน ในรูปแบบไฟล์ PDF</span></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="card" style="grid-column: span 6; display:flex; flex-direction:column; gap:24px;">
+          <h2 style="font-family:'Kanit'; font-size: clamp(22px, 2vw, 32px);">เครื่องมือช่วยเหลือ</h2>
+          <div class="video-card">
+            <strong>ศูนย์รวมบัญชีต้องสงสัย</strong>
+            <p>สแกน QR เพื่อตรวจสอบบัญชีต้องสงสัย <a href="https://www.thaipoliceonline.com/#/checkAccount" target="_blank" style="color: var(--accent);">thaipoliceonline.com/checkAccount</a></p>
+          </div>
+          <div class="video-card">
+            <strong>แอป “Police I lert U”</strong>
+            <p>ส่งพิกัดและหลักฐานได้ภายในแอปเดียว เจ้าหน้าที่ตอบกลับใน 5 นาที</p>
+          </div>
+          <div class="video-card">
+            <strong>Cyber Security Volunteer (CSV)</strong>
+            <p>ทีมอาสาดิจิทัลของกระทรวงดิจิทัลฯ ช่วยสแกนลิงก์หลอกและแจ้งปิดเว็บ</p>
+          </div>
+        </div>
+      </div>
+      <div class="footer-nav">
+        <span>ยุทธการ “ล้างเว็บหลอก” ปิดเว็บไซต์ไปแล้วกว่า 7,200 URLs ในปี 2567</span>
+        <button class="nav-button" data-next>กรณีศึกษา</button>
+      </div>
+    </section>
+
+    <section class="slide" data-title="case-studies" id="case-studies">
+      <div class="nav-bar">
+        <div class="nav-left">SCAMMER WATCH</div>
+        <div class="nav-right">
+          <span data-target="intro">หน้าแรก</span>
+          <span data-target="definition">คืออะไร</span>
+          <span data-target="victims">เหยื่อ</span>
+          <span data-target="threats">ภัยใกล้ตัว</span>
+          <span data-target="statistics">สถิติ</span>
+          <span data-target="prevention">ป้องกัน</span>
+          <span data-target="case-studies" class="active">กรณีศึกษา</span>
+        </div>
+      </div>
+      <div class="slide-content">
+        <div class="card" style="grid-column: span 7;">
+          <h1 class="headline">Case Studies : เรียนรู้จากเหตุจริง</h1>
+          <div class="grid-two" style="margin-top: 24px;">
+            <div class="video-card">
+              <strong>ยูทูบ : เปิดปฏิบัติการบุกช่วยเหยื่อคอลเซ็นเตอร์</strong>
+              <p><a href="https://www.youtube.com/watch?v=rV5t1WCeXL8g" target="_blank" style="color: var(--accent);">ชมคลิป</a> - เก็บหลักฐานการอายัดทรัพย์ข้ามประเทศ</p>
+            </div>
+            <div class="video-card">
+              <strong>สารคดีสั้น : เสียงจากผู้รอดชีวิตในปอยเปต</strong>
+              <p><a href="https://www.youtube.com/watch?v=xkaMuS6P9vI" target="_blank" style="color: var(--accent);">ชมคลิป</a> - เหยื่อชาวเกาหลีใต้เล่าประสบการณ์ถูกบังคับทำงาน</p>
+            </div>
+            <div class="video-card">
+              <strong>ThaiPBS : เมื่อคนไทยกลายเป็นผู้ช่วยสแกมเมอร์</strong>
+              <p><a href="https://www.youtube.com/watch?v=K2M5eFOMx8U" target="_blank" style="color: var(--accent);">ชมคลิป</a> - โครงข่ายบัญชีม้าในประเทศ</p>
+            </div>
+            <div class="video-card">
+              <strong>Podcast : Deepfake Romance Scam</strong>
+              <p><a href="https://www.youtube.com/watch?v=JuM5ML8q3sQ" target="_blank" style="color: var(--accent);">ฟังเลย</a> - เทคนิคจับผิดเสียงสังเคราะห์</p>
+            </div>
+          </div>
+        </div>
+        <div class="card" style="grid-column: span 5;">
+          <h2 style="font-family:'Kanit'; font-size: clamp(20px, 2vw, 32px);">Takeaway สำคัญ</h2>
+          <div class="quote-block">
+            <p>“การช่วยเหลือเหยื่อสแกมเมอร์ในกัมพูชาเป็นความร่วมมือระหว่างไทย-เกาหลีใต้-อาเซียน ผู้เสียหายส่วนใหญ่ถูกลวงด้วยสัญญาจ้างงาน และถูกยึดหนังสือเดินทางทันทีที่เดินทางถึงคอมพาวด์”</p>
+          </div>
+          <div class="note-card" style="margin-top: 24px;">
+            <strong>3 ขั้นหลังนำเสนอ</strong>
+            <ul class="list-style">
+              <li><span class="badge">1</span><span>ตั้งกลุ่มแจ้งเตือนครอบครัวใน LINE แชร์ข่าวเตือนภัยสัปดาห์ละครั้ง</span></li>
+              <li><span class="badge">2</span><span>เปิดใช้งาน 2FA ทุกบัญชีสำคัญ และรีวิวสิทธิ์เข้าถึงแอปทุกไตรมาส</span></li>
+              <li><span class="badge">3</span><span>จัดอบรมภายในองค์กร 30 นาที/เดือน พร้อมจำลองสถานการณ์ตอบสนอง</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="footer-nav">
+        <span>ขอบคุณที่ร่วมสร้างสังคมที่ปลอดภัยยิ่งขึ้น</span>
+        <button class="nav-button" data-next>สไลด์สุดท้าย</button>
+      </div>
+    </section>
+
+    <section class="slide" data-title="thankyou" id="thankyou">
+      <div class="nav-bar">
+        <div class="nav-left">SCAMMER WATCH</div>
+        <div class="nav-right">
+          <span data-target="intro">หน้าแรก</span>
+          <span data-target="definition">คืออะไร</span>
+          <span data-target="victims">เหยื่อ</span>
+          <span data-target="threats">ภัยใกล้ตัว</span>
+          <span data-target="statistics">สถิติ</span>
+          <span data-target="prevention">ป้องกัน</span>
+          <span data-target="case-studies">กรณีศึกษา</span>
+        </div>
+      </div>
+      <div class="slide-content" style="place-items:center; text-align:center;">
+        <div class="card" style="max-width: 760px; margin:auto; display:flex; flex-direction:column; gap:24px; align-items:center;">
+          <div style="font-size: clamp(32px, 4vw, 52px); font-family:'Kanit'; font-weight:800; color:var(--accent);">THANK YOU</div>
+          <p class="subhead" style="text-align:center;">จับตาสัญญาณผิดปกติในทุกแพลตฟอร์ม ร่วมกันแจ้งเตือนและปกป้องกันและกันจากภัยสแกมเมอร์</p>
+          <div class="note-card" style="align-items:center;">
+            <strong>Keep Alert · Keep Safe</strong>
+            <p>ติดตามข้อมูลเตือนภัยล่าสุดผ่านเพจ “ศูนย์ PCT ตำรวจไซเบอร์” และเว็บไซต์ <a href="https://www.thaipoliceonline.com" target="_blank" style="color: var(--accent);">thaipoliceonline.com</a></p>
+          </div>
+          <div class="credit">จัดทำโดยทีมเฝ้าระวังภัยไซเบอร์ · ตุลาคม 2567</div>
+        </div>
+      </div>
+      <div class="footer-nav">
+        <span>จบนำเสนอ</span>
+        <button class="nav-button" data-target="intro">ย้อนกลับหน้าแรก</button>
+      </div>
+    </section>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js" integrity="sha512-mgCAt7FoXZH2svclP1pXiI0A9DKdwioO0flXSgEGUA0te6mrk9dKNl2Uhj4Wvi7jn8IJ5ABDIy1mMI0DEG2Omg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script>
+    const presentation = document.getElementById('presentation');
+    const slides = Array.from(document.querySelectorAll('section.slide'));
+    const navButtons = document.querySelectorAll('.nav-right span, .nav-button');
+    const progressIndicator = document.getElementById('progressIndicator');
+
+    // Build progress dots
+    slides.forEach((slide, index) => {
+      const dot = document.createElement('div');
+      dot.classList.add('progress-dot');
+      dot.dataset.target = slide.dataset.title;
+      dot.addEventListener('click', () => scrollToSlide(slide.dataset.title));
+      progressIndicator.appendChild(dot);
+    });
+
+    const dots = Array.from(document.querySelectorAll('.progress-dot'));
+
+    function scrollToSlide(id) {
+      const slide = slides.find(slide => slide.dataset.title === id || slide.id === id);
+      if (slide) {
+        slide.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+
+    navButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        const target = button.dataset.target;
+        if (target) {
+          scrollToSlide(target);
+          return;
+        }
+        if (button.hasAttribute('data-next')) {
+          const parentSlide = button.closest('section');
+          const index = slides.indexOf(parentSlide);
+          const nextSlide = slides[index + 1] || slides[slides.length - 1];
+          nextSlide.scrollIntoView({ behavior: 'smooth' });
+        }
+      });
+    });
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const index = slides.indexOf(entry.target);
+          dots.forEach(dot => dot.classList.remove('active'));
+          dots[index].classList.add('active');
+        }
+      });
+    }, { threshold: 0.6 });
+
+    slides.forEach(slide => observer.observe(slide));
+
+    // Intro impact animation using GSAP
+    const impactRing = document.getElementById('impactRing');
+    const letters = document.querySelectorAll('.scammer-letter');
+    const timeline = gsap.timeline({ defaults: { ease: 'power4.out' } });
+
+    timeline
+      .fromTo('.hero-visual', { scale: 0.92, opacity: 0 }, { duration: 1.2, scale: 1, opacity: 1, ease: 'power2.out' }, 0)
+      .fromTo('.context-bar', { y: -20, opacity: 0 }, { duration: 0.8, y: 0, opacity: 1 }, 0.3)
+      .fromTo('.note-card', { y: 30, opacity: 0 }, { duration: 0.9, y: 0, opacity: 1, stagger: 0.15 }, 0.4);
+
+    letters.forEach((letter, i) => {
+      const delay = 0.3 + i * 0.2;
+      timeline.fromTo(letter, {
+        opacity: 0,
+        y: -200,
+        rotateX: 65,
+        scale: 1.6
+      }, {
+        opacity: 1,
+        y: 0,
+        rotateX: 0,
+        scale: 1,
+        duration: 0.7,
+        ease: 'bounce.out',
+        onStart: () => {
+          gsap.fromTo(impactRing, {
+            opacity: 0,
+            scale: 0.2,
+            borderWidth: 10
+          }, {
+            opacity: 0.8,
+            scale: 1.4,
+            borderWidth: 2,
+            duration: 0.45,
+            ease: 'power2.out',
+            transformOrigin: 'center',
+            onComplete: () => {
+              gsap.to(impactRing, { opacity: 0, duration: 0.6, ease: 'power2.in' });
+            }
+          });
+        }
+      }, delay);
+    });
+
+    // Slide in animations when entering viewport
+    slides.forEach(slide => {
+      const animatedCards = slide.querySelectorAll('.card, .stat-card, .timeline-item, .video-card, .note-card');
+      animatedCards.forEach((element, index) => {
+        gsap.set(element, { opacity: 0, y: 30 });
+        const localObserver = new IntersectionObserver(entries => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              gsap.to(entry.target, {
+                opacity: 1,
+                y: 0,
+                duration: 0.8,
+                delay: index * 0.08,
+                ease: 'power3.out'
+              });
+              localObserver.unobserve(entry.target);
+            }
+          });
+        }, { threshold: 0.4 });
+        localObserver.observe(element);
+      });
+    });
+  </script>
+</body>
+</html>
