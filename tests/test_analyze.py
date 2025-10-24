@@ -1,6 +1,8 @@
 from pathlib import Path
 
+import pandas as pd
 import pytest
+from textblob import TextBlob
 
 pytest.importorskip("pandas")
 pytest.importorskip("sklearn")
@@ -67,3 +69,37 @@ def test_analyze_articles_returns_expected_frames(analyzed_config: AppConfig) ->
     assert not articles_df.empty
     assert "keywords" in articles_df.columns
     assert "article_sentiment" in articles_df.columns
+
+
+def test_sentiment_merge_preserves_non_midnight_timestamp(analyzed_config: AppConfig) -> None:
+    db_path = analyzed_config.storage.database_path
+    upsert_json_rows(
+        db_path,
+        analyzed_config.storage.clean_table,
+        [
+            {
+                "url": "https://example.com/late",
+                "source_domain": "example.com",
+                "title": "Late Publication",
+                "body_text": "This article is wonderful, amazing, and fantastic.",
+                "published_at": "2023-01-04T15:30:00",
+                "language": "en",
+                "was_translated": 0,
+                "content_hash": "hash3",
+            }
+        ],
+    )
+
+    results = analyze_articles(analyzed_config)
+    articles_df = results["articles"]
+    late_article = articles_df.loc[articles_df["url"] == "https://example.com/late"].iloc[0]
+    expected_sentiment = TextBlob(late_article["body_text"]).sentiment.polarity
+    assert late_article["article_sentiment"] == pytest.approx(expected_sentiment)
+    assert pd.to_datetime(late_article["published_at_window"]).hour == 0
+
+    sentiment_df = results["sentiment"]
+    window_match = sentiment_df.loc[
+        pd.to_datetime(sentiment_df["published_at"]) == pd.to_datetime(late_article["published_at_window"])
+    ]
+    assert not window_match.empty
+    assert window_match.iloc[0]["sentiment"] == pytest.approx(expected_sentiment)
