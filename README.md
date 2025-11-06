@@ -1,82 +1,111 @@
-# Project Empathy
+# Project Empathy – IA réceptionniste pour restaurants
 
-Project Empathy is a production-ready yet lightweight data pipeline that collects, cleans, translates, analyzes, and exports Malaysian news coverage related to bullying, suicide, and homicide among students. The toolkit is designed with an ethics-by-design approach, respecting source terms of use and emphasizing transparent citations.
+Project Empathy est une plate-forme SaaS destinée aux restaurateurs. Elle connecte leur numéro Twilio à une IA conversationnelle capable de répondre aux clients 24 h/24, de prendre des commandes, de gérer les réservations et de suivre la facturation via des abonnements Flexprice ou Stripe Billing.
 
-## Features
+## Fonctionnalités principales
 
-* Automated discovery of credible Malaysian outlets across English, Malay, and Chinese languages.
-* Best-effort crawling and NewsAPI integration for article collection with rate-limiting.
-* Data cleaning, boilerplate removal, and translation to English (Malay/Chinese to English via Google Translate).
-* NLP pipeline covering TF-IDF keyword frequency, category co-occurrence, and TextBlob sentiment.
-* SQLite-backed storage with structured models and parquet/CSV exports for Power BI.
-* Typer-based CLI orchestration with modular steps (`pe crawl`, `pe clean`, `pe translate`, etc.).
-* HTML report summarizing activity and key metrics.
+- **Téléphonie Twilio Voice** : webhook FastAPI pour accueillir l'appelant et boucler sur les transcriptions. L'IA répond en français et conserve l'historique de l'appel.
+- **IA conversationnelle** : intégration OpenAI (ou compatbile) avec prompt "réceptionniste de restaurant". L'IA propose des ventes additionnelles, confirme les commandes et pose des questions de clarification.
+- **Gestion du menu** : CRUD complet pour catégories et plats, utilisé par l'IA et exposé dans le tableau de bord.
+- **Prise de commandes et réservations** : stockage structuré, calcul des montants, suivi du statut et enregistrement du contexte d'appel.
+- **Abonnements Flexprice/Stripe** : synchronisation de plans, suivi des crédits, blocage des fonctionnalités en cas de dépassement.
+- **Dashboard restaurateur** : statistiques (nombre d'appels, commandes, panier moyen, CA) exposées via API pour le front React.
 
-## Installation
+## Structure du dépôt
+
+```
+project/
+├── src/project_empathy
+│   ├── main.py                # Application FastAPI et configuration CORS
+│   ├── config.py              # Paramètres (DB, Twilio, OpenAI, Flexprice)
+│   ├── db.py                  # Session SQLAlchemy
+│   ├── models/                # ORM (restaurants, menu, commandes, abonnements…)
+│   ├── schemas/               # Schémas Pydantic (API)
+│   ├── services/              # Logique métier (commandes, stats, téléphonie)
+│   ├── api/                   # Routes FastAPI v1
+│   ├── ai/assistant.py        # Orchestrateur OpenAI
+│   └── billing/flexprice.py   # Client Flexprice minimal
+├── frontend/                  # Tableau de bord React
+├── tests/                     # Tests Pytest des endpoints principaux
+├── config.example.yaml        # Exemple de configuration
+├── requirements.txt           # Dépendances backend
+└── README.md
+```
+
+## Prérequis
+
+- Python 3.10+
+- Node.js 18+ (pour le front)
+- PostgreSQL (prod) ou SQLite (développement)
+- Comptes Twilio, OpenAI/Mistral et Flexprice/Stripe
+
+## Installation backend
 
 ```bash
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-python -m textblob.download_corpora  # first-run setup for sentiment analysis
+cp config.example.yaml config.yaml  # puis éditer
+uvicorn project_empathy.main:app --reload
 ```
 
-Alternatively you can install in editable mode:
+### Variables d'environnement
+
+Les paramètres sont chargés via des variables `EMP_` (voir `config.py`). Exemple :
 
 ```bash
-pip install -e .
+export EMP_DATABASE__URL="postgresql+psycopg2://user:pass@localhost/empathy"
+export EMP_OPENAI__API_KEY="sk-..."
+export EMP_TWILIO__ACCOUNT_SID="AC..."
+export EMP_TWILIO__AUTH_TOKEN="..."
 ```
 
-## Quick Start
+## Base de données
 
-1. Initialize configuration and environment templates:
+Le script `scripts/init_db.py` crée les tables SQLAlchemy.
 
-   ```bash
-   pe init
-   ```
+```bash
+python scripts/init_db.py
+```
 
-2. Edit the generated `.env` and `config.yaml` to suit your needs. Supply `NEWSAPI_KEY` if available.
-3. Run the pipeline:
+En production, configurez PostgreSQL puis exécutez le script. SQLite reste pratique pour les tests locaux.
 
-   ```bash
-   pe all
-   ```
+## Front-end React
 
-   Individual steps are also available: `pe crawl`, `pe clean`, `pe translate`, `pe analyze`, `pe export`.
+Le tableau de bord se trouve dans `frontend/` et a été généré avec Vite.
 
-## Configuration
+```bash
+cd frontend
+npm install
+npm run dev
+```
 
-Configuration is YAML-based and validated with Pydantic. See `config.example.yaml` for the full schema. Key sections include:
+Le front consomme les endpoints `/api/v1/...` (voir documentation ci-dessous).
 
-* `storage`: Database and data directory settings
-* `news`: Domains, languages, keywords, and request pacing
-* `pipeline`: Thresholds and toggles for cleaning, translation, and analysis
+## Documentation API
 
-Environment variables live in `.env` (see `.env.example`). Only `NEWSAPI_KEY` is required for NewsAPI integration; the rest of the pipeline functions without it.
+La documentation interactive est disponible sur `http://localhost:8000/docs` grâce à FastAPI. Un aperçu textuel est fourni dans `docs/api.md` (endpoints de création de restaurants, menus, commandes, réservations, etc.).
 
-## Data Ethics
-
-* Robots.txt is honored via pre-flight checks and domain allow-listing.
-* Rate-limiting (requests per minute) and retry logic mitigate traffic bursts.
-* Personally identifiable information (PII) is not extracted. Content is used for aggregate insights only.
-* Every exported article contains citation metadata: source, URL, and publication date.
-
-## Outputs
-
-* `data/empathy.db`: SQLite database storing raw, clean, and analyzed article tables.
-* `data/*.parquet`: Intermediate storage for clean datasets.
-* `outputs/`: Final CSVs and HTML report for Power BI consumption.
-
-## Development
-
-Run the test suite with:
+## Tests
 
 ```bash
 pytest
 ```
 
-The codebase uses type hints and logging extensively. New modules should follow the patterns demonstrated in the existing implementation. Contributions should include appropriate unit tests and documentation.
+## Déploiement
 
-## License
+- Construire l'image Docker (exemple dans `docs/deployment.md`).
+- Configurer les variables d'environnement (voir ci-dessus).
+- Utiliser `ngrok http 8000` pour exposer le webhook Twilio en développement.
+- Activer HTTPS (Traefik, Caddy, nginx) en production.
 
-This project is released under the MIT License. See `LICENSE` for details.
+## Sécurité & conformité
+
+- Secrets en variables d'environnement, jamais en clair dans le dépôt.
+- HTTPS obligatoire et rotation régulière des clés API.
+- Données personnelles anonymisées sur demande, conformément au RGPD.
+- Pas de stockage des cartes bancaires : déléguer à Stripe/Flexprice.
+
+## Licence
+
+Projet sous licence MIT.

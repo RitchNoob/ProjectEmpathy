@@ -1,13 +1,5 @@
-"""Project Empathy package."""
+"""Project Empathy SaaS platform for AI restaurant receptionists."""
 
-from importlib.metadata import version
+from .main import create_app
 
-__all__ = ["get_version"]
-
-
-def get_version() -> str:
-    """Return package version."""
-    try:
-        return version("project_empathy")
-    except Exception:  # pragma: no cover - fallback when metadata missing
-        return "0.0.0"
+__all__ = ["create_app"]

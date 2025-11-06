@@ -1,44 +1,31 @@
-storage:
-  database_path: data/empathy.db
-  raw_table: articles_raw
-  clean_table: articles_clean
-  analyzed_table: articles_analyzed
-  data_dir: data
-  outputs_dir: outputs
+# Example configuration for Project Empathy backend
 
-news:
-  start_date: 2023-01-01
-  end_date: 2023-12-31
-  languages: [en, ms, zh]
-  keywords:
-    - bullying
-    - suicide
-    - homicide
-    - student
-    - school
-    - university
-    - mental health
-  domains:
-    - thestar.com.my
-    - freemalaysiatoday.com
-    - malaymail.com
-    - channelnewsasia.com
-    - bharian.com.my
-    - hmetro.com.my
-    - utusan.com.my
-    - sinchew.com.my
-    - chinapress.com.my
-  request_interval_seconds: 3
-  robots_cache_hours: 12
+application:
+  debug: true
+  secret_key: "change-me"
+  allowed_origins:
+    - "http://localhost:5173"
 
-pipeline:
-  translate_non_english: true
-  tfidf_top_k: 20
-  cooccurrence_window: 2
-  sentiment_time_window: D
-  min_article_length: 500
-  chunk_size: 50
+  database:
+    url: "sqlite:///./empathy.db"
+    echo: false
 
-report:
-  title: Project Empathy Report
-  description: Insights on Malaysian student-related harm coverage.
+  twilio:
+    account_sid: "ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    auth_token: "your_twilio_token"
+    voice_phone_number: "+33123456789"
+    status_callback_url: "https://example.com/api/v1/twilio/status"
+
+  openai:
+    api_key: "sk-..."
+    model: "gpt-4o-mini"
+    request_timeout: 60
+
+  flexprice:
+    base_url: "https://api.flexprice.io"
+    api_key: "flexprice_api_key"
+    product_id: "prod_xxx"
+
+  storage:
+    data_dir: "data"
+    transcripts_dir: "data/transcripts"
