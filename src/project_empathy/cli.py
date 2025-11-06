@@ -1,103 +1,160 @@
-"""Typer CLI for Project Empathy."""
+"""Command-line helpers for running and bootstrapping Project Empathy."""
 
 from __future__ import annotations
 
-from pathlib import Path
+import argparse
+import json
+import sys
+from contextlib import contextmanager
+from typing import Iterator, Optional
 
-import typer
+from sqlalchemy.orm import Session
 
-from .analyze import analyze_articles
-from .clean import clean_articles
-from .config import AppConfig, load_config, write_default_config
-from .db import init_db
-from .export import export_outputs
-from .logging_utils import get_logger
-from .scrape import crawl as crawl_pipeline
-from .translate import translate_articles
-from .utils import ensure_directory
-
-app = typer.Typer(help="Project Empathy data pipeline")
-LOGGER = get_logger("cli")
+from .bootstrap import create_schema, seed_demo_data
+from .config import ApplicationSettings, get_settings
+from .db import SessionLocal
+from .models import Restaurant
+from .services.auth import issue_api_token
+from .services.statistics import compute_dashboard_stats
 
 
-def _load_config(path: Path) -> AppConfig:
-    if not path.exists():
-        raise typer.BadParameter(f"Config file not found: {path}")
-    return load_config(path)
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(prog="empathy", description="Utilitaires Project Empathy")
+    subparsers = parser.add_subparsers(dest="command", required=True)
+
+    init_parser = subparsers.add_parser("init-db", help="Crée les tables et options de démo")
+    init_parser.add_argument("--seed-demo", action="store_true", help="Charge un restaurant de démonstration")
+    init_parser.add_argument(
+        "--force", action="store_true", help="Écrase les données existantes avant l'insertion de la démo"
+    )
+
+    seed_parser = subparsers.add_parser("seed-demo", help="Ajoute les données de démonstration")
+    seed_parser.add_argument("--force", action="store_true", help="Réinitialise les données existantes")
+
+    config_parser = subparsers.add_parser("config", help="Affiche la configuration active")
+    config_parser.add_argument("--json", action="store_true", help="Retourne la configuration au format JSON")
+
+    stats_parser = subparsers.add_parser("stats", help="Affiche les métriques d'un restaurant")
+    stats_parser.add_argument("restaurant_id", type=int, nargs="?", help="Identifiant du restaurant (défaut: premier)")
+
+    server_parser = subparsers.add_parser("runserver", help="Lance l'API FastAPI via Uvicorn")
+    server_parser.add_argument("--host", default="0.0.0.0")
+    server_parser.add_argument("--port", type=int, default=8000)
+    server_parser.add_argument("--reload", action="store_true", help="Active le rechargement auto (développement)")
+
+    token_parser = subparsers.add_parser("create-token", help="Génère une clé API pour un restaurant")
+    token_parser.add_argument("restaurant_id", type=int, help="Identifiant du restaurant")
+    token_parser.add_argument("--name", default="Clé API", help="Nom lisible de la clé")
+
+    return parser
 
 
-@app.command()
-def init(config_path: Path = typer.Option(Path("config.yaml"), help="Configuration file path")) -> None:
-    """Initialize configuration and environment templates."""
+def main(argv: Optional[list[str]] = None) -> int:
+    parser = build_parser()
+    args = parser.parse_args(argv)
 
-    if config_path.exists():
-        typer.echo(f"Config file already exists at {config_path}")
+    if args.command == "init-db":
+        create_schema()
+        print("✅ Tables SQL créées")
+        if args.seed_demo:
+            _seed_demo(force=args.force)
+        return 0
+
+    if args.command == "seed-demo":
+        _seed_demo(force=args.force)
+        return 0
+
+    if args.command == "config":
+        settings = get_settings()
+        if args.json:
+            print(_settings_to_json(settings))
+        else:
+            print(_settings_to_pretty_string(settings))
+        return 0
+
+    if args.command == "stats":
+        return _print_stats(args.restaurant_id)
+
+    if args.command == "runserver":
+        return _run_server(args.host, args.port, args.reload)
+
+    if args.command == "create-token":
+        return _create_token(args.restaurant_id, args.name)
+
+    parser.print_help()
+    return 1
+
+
+def _seed_demo(*, force: bool) -> None:
+    result = seed_demo_data(skip_existing=not force)
+    if result.created:
+        print("✅ Données de démonstration prêtes")
+        if result.api_key:
+            print(f"🔑 Clé API de démonstration: {result.api_key}")
+            print("➡️  Elle est également sauvegardée dans data/demo_api_key.txt")
     else:
-        write_default_config(config_path)
-        typer.echo(f"Created config at {config_path}")
-    env_path = Path(".env")
-    if env_path.exists():
-        typer.echo(".env already exists")
-    else:
-        example_env = Path(".env.example")
-        env_path.write_text(example_env.read_text(encoding="utf-8"), encoding="utf-8")
-        typer.echo("Created .env from example")
-    ensure_directory(Path("data"))
-    ensure_directory(Path("outputs"))
+        print("ℹ️  Données déjà présentes (utilisez --force pour les régénérer)")
 
 
-@app.command()
-def crawl(config: Path = typer.Option(Path("config.yaml"), help="Config path")) -> None:
-    """Fetch articles from configured sources."""
-
-    app_config = _load_config(config)
-    crawl_pipeline(app_config)
+def _settings_to_json(settings: ApplicationSettings) -> str:
+    return settings.model_dump_json(indent=2)
 
 
-@app.command()
-def clean(config: Path = typer.Option(Path("config.yaml"), help="Config path")) -> None:
-    """Clean raw articles."""
-
-    app_config = _load_config(config)
-    clean_articles(app_config)
+def _settings_to_pretty_string(settings: ApplicationSettings) -> str:
+    return settings.model_dump_json(indent=2, ensure_ascii=False)
 
 
-@app.command()
-def translate(config: Path = typer.Option(Path("config.yaml"), help="Config path")) -> None:
-    """Translate articles to English."""
-
-    app_config = _load_config(config)
-    translate_articles(app_config)
-
-
-@app.command()
-def analyze(config: Path = typer.Option(Path("config.yaml"), help="Config path")) -> None:
-    """Run analysis pipeline."""
-
-    app_config = _load_config(config)
-    analyze_articles(app_config)
+@contextmanager
+def _session_scope() -> Iterator[Session]:
+    session = SessionLocal()
+    try:
+        yield session
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise
+    finally:
+        session.close()
 
 
-@app.command()
-def export(config: Path = typer.Option(Path("config.yaml"), help="Config path")) -> None:
-    """Export results to CSV and HTML report."""
-
-    app_config = _load_config(config)
-    export_outputs(app_config)
-
-
-@app.command(name="all")
-def run_all(config: Path = typer.Option(Path("config.yaml"), help="Config path")) -> None:
-    """Run entire pipeline sequentially."""
-
-    app_config = _load_config(config)
-    init_db(app_config.storage.database_path)
-    crawl_pipeline(app_config)
-    clean_articles(app_config)
-    translate_articles(app_config)
-    analyze_articles(app_config)
-    export_outputs(app_config)
+def _print_stats(restaurant_id: Optional[int]) -> int:
+    with _session_scope() as session:
+        target_id = restaurant_id
+        if target_id is None:
+            restaurant = session.query(Restaurant).order_by(Restaurant.id.asc()).first()
+            if restaurant is None:
+                print("Aucun restaurant trouvé. Lancez 'seed-demo' d'abord.")
+                return 1
+            target_id = restaurant.id
+        stats = compute_dashboard_stats(session, target_id)
+        print(json.dumps(stats.model_dump(), indent=2, ensure_ascii=False))
+    return 0
 
 
-if __name__ == "__main__":  # pragma: no cover
-    app()
+def _create_token(restaurant_id: int, name: str) -> int:
+    with _session_scope() as session:
+        restaurant = session.get(Restaurant, restaurant_id)
+        if restaurant is None:
+            print("Restaurant introuvable", file=sys.stderr)
+            return 1
+        _, api_key = issue_api_token(session, restaurant, name)
+        print(f"🔑 Nouvelle clé API pour {restaurant.name}: {api_key}")
+        return 0
+
+
+def _run_server(host: str, port: int, reload: bool) -> int:
+    try:
+        import uvicorn
+    except ImportError:  # pragma: no cover - only triggered when uvicorn absent
+        print("Uvicorn est requis pour lancer le serveur: pip install -r requirements.txt", file=sys.stderr)
+        return 1
+
+    from .main import app
+    create_schema()
+
+    uvicorn.run(app, host=host, port=port, reload=reload)
+    return 0
+
+
+if __name__ == "__main__":  # pragma: no cover - module entry point
+    raise SystemExit(main())
