@@ -41,7 +41,7 @@ def create_item(
     restaurant_id: int, payload: MenuItemCreate, session: Session = Depends(get_session)
 ) -> MenuItem:
     restaurant = _get_restaurant(session, restaurant_id)
-    item = MenuItem(restaurant=restaurant, **payload.dict())
+    item = MenuItem(restaurant=restaurant, **payload.model_dump())
     session.add(item)
     session.flush()
     return item
@@ -58,7 +58,7 @@ def update_item(
     item = session.get(MenuItem, item_id)
     if not item or item.restaurant_id != restaurant_id:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Menu item not found")
-    for key, value in payload.dict(exclude_unset=True).items():
+    for key, value in payload.model_dump(exclude_unset=True).items():
         setattr(item, key, value)
     session.add(item)
     session.flush()
@@ -81,7 +81,7 @@ def create_category(
     restaurant_id: int, payload: MenuCategoryCreate, session: Session = Depends(get_session)
 ) -> MenuCategory:
     restaurant = _get_restaurant(session, restaurant_id)
-    category = MenuCategory(restaurant=restaurant, **payload.dict())
+    category = MenuCategory(restaurant=restaurant, **payload.model_dump())
     session.add(category)
     session.flush()
     return category

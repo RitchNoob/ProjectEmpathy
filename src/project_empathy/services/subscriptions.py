@@ -32,14 +32,25 @@ def ensure_active_subscription(session: Session, restaurant_id: int) -> Subscrip
     return subscription
 
 
-def record_usage(session: Session, subscription: Subscription, metric: str, amount: int, metadata: str | None = None) -> UsageRecord:
+def record_usage(
+    session: Session,
+    subscription: Subscription,
+    metric: str,
+    amount: int,
+    metadata: str | None = None,
+) -> UsageRecord:
     """Create a usage record and decrement credits/quota if applicable."""
 
     if subscription.credits_remaining is not None and subscription.credits_remaining > 0:
         subscription.credits_remaining = max(subscription.credits_remaining - amount, 0)
         session.add(subscription)
 
-    usage = UsageRecord(subscription=subscription, metric=metric, amount=amount, metadata=metadata)
+    usage = UsageRecord(
+        subscription=subscription,
+        metric=metric,
+        amount=amount,
+        metadata_payload=metadata,
+    )
     session.add(usage)
     session.flush()
     return usage

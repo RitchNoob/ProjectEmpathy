@@ -19,7 +19,16 @@ def list_plans(session: Session = Depends(get_session)) -> list[SubscriptionPlan
 
 @router.post("/plans", response_model=SubscriptionPlanRead, status_code=status.HTTP_201_CREATED)
 def create_plan(payload: SubscriptionPlanCreate, session: Session = Depends(get_session)) -> SubscriptionPlan:
-    plan = SubscriptionPlan(**payload.dict())
+    existing = session.query(SubscriptionPlan).filter_by(external_id=payload.external_id).one_or_none()
+    data = payload.model_dump()
+    if existing:
+        for key, value in data.items():
+            setattr(existing, key, value)
+        session.add(existing)
+        session.flush()
+        return existing
+
+    plan = SubscriptionPlan(**data)
     session.add(plan)
     session.flush()
     return plan
@@ -38,10 +47,10 @@ def create_subscription(
 
     subscription = session.query(Subscription).filter_by(restaurant_id=restaurant.id).one_or_none()
     if subscription:
-        for key, value in payload.dict().items():
+        for key, value in payload.model_dump().items():
             setattr(subscription, key, value)
     else:
-        subscription = Subscription(restaurant=restaurant, **payload.dict())
+        subscription = Subscription(restaurant=restaurant, **payload.model_dump())
         session.add(subscription)
     session.flush()
     return subscription

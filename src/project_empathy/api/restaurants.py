@@ -19,7 +19,7 @@ def list_restaurants(session: Session = Depends(get_session)) -> list[Restaurant
 
 @router.post("/", response_model=RestaurantRead, status_code=status.HTTP_201_CREATED)
 def create_restaurant(payload: RestaurantCreate, session: Session = Depends(get_session)) -> Restaurant:
-    restaurant = Restaurant(**payload.dict())
+    restaurant = Restaurant(**payload.model_dump())
     session.add(restaurant)
     session.flush()
     return restaurant
@@ -38,7 +38,7 @@ def update_restaurant(restaurant_id: int, payload: RestaurantUpdate, session: Se
     restaurant = session.get(Restaurant, restaurant_id)
     if not restaurant:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Restaurant not found")
-    for key, value in payload.dict(exclude_unset=True).items():
+    for key, value in payload.model_dump(exclude_unset=True).items():
         setattr(restaurant, key, value)
     session.add(restaurant)
     session.flush()

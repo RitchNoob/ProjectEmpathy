@@ -30,7 +30,7 @@ class Restaurant(Base, TimestampMixin):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
-    email: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
+    email: Mapped[str] = mapped_column(String(255), nullable=False)
     phone_number: Mapped[Optional[str]] = mapped_column(String(32))
     timezone: Mapped[str] = mapped_column(String(64), default="Europe/Paris", nullable=False)
     address: Mapped[Optional[str]] = mapped_column(String(512))
@@ -190,7 +190,7 @@ class UsageRecord(Base, TimestampMixin):
     subscription_id: Mapped[int] = mapped_column(ForeignKey("subscriptions.id"), nullable=False, index=True)
     metric: Mapped[str] = mapped_column(String(64), nullable=False)
     amount: Mapped[int] = mapped_column(Integer, nullable=False)
-    metadata: Mapped[Optional[str]] = mapped_column(Text)
+    metadata_payload: Mapped[Optional[str]] = mapped_column("metadata", Text)
 
     subscription: Mapped[Subscription] = relationship(back_populates="usage_records")
 

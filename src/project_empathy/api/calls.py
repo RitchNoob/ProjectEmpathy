@@ -35,7 +35,7 @@ def create_call_session(
     restaurant_id: int, payload: CallSessionCreate, session: Session = Depends(get_session)
 ) -> CallSession:
     restaurant = _get_restaurant(session, restaurant_id)
-    call = CallSession(restaurant=restaurant, **payload.dict())
+    call = CallSession(restaurant=restaurant, **payload.model_dump())
     session.add(call)
     session.flush()
     return call

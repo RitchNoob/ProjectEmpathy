@@ -41,7 +41,7 @@ def create_reservation(
     except SubscriptionError as exc:  # pragma: no cover - defensive branch
         raise HTTPException(status_code=status.HTTP_402_PAYMENT_REQUIRED, detail=str(exc)) from exc
 
-    reservation = Reservation(restaurant=restaurant, **payload.dict())
+    reservation = Reservation(restaurant=restaurant, **payload.model_dump())
     session.add(reservation)
     session.flush()
     record_usage(session, subscription, metric="reservations", amount=1, metadata=f"reservation:{reservation.id}")

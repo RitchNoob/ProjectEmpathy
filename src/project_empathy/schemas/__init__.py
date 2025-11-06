@@ -228,7 +228,10 @@ class SubscriptionRead(SubscriptionBase):
 class UsageRecordBase(BaseModel):
     metric: str
     amount: int
-    metadata: Optional[str] = None
+    metadata: Optional[str] = Field(default=None, alias="metadata_payload")
+
+    class Config:
+        populate_by_name = True
 
 
 class UsageRecordCreate(UsageRecordBase):
@@ -243,6 +246,7 @@ class UsageRecordRead(UsageRecordBase):
 
     class Config:
         from_attributes = True
+        populate_by_name = True
 
 
 class DashboardStats(BaseModel):
