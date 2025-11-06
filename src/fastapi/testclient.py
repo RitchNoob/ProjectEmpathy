@@ -13,7 +13,7 @@ from pydantic import BaseModel
 from .applications import FastAPI
 from .dependencies import Dependency
 from .exceptions import HTTPException
-from .params import FormParam
+from .params import FormParam, HeaderParam
 from .status import HTTP_404_NOT_FOUND, HTTP_500_INTERNAL_SERVER_ERROR
 
 
@@ -38,17 +38,41 @@ class TestClient:
     def __exit__(self, exc_type, exc, tb) -> bool:
         return False
 
-    def get(self, url: str, *, params: Optional[Mapping[str, Any]] = None) -> TestResponse:
-        return self._request("GET", url, params=params)
+    def get(
+        self,
+        url: str,
+        *,
+        params: Optional[Mapping[str, Any]] = None,
+        headers: Optional[Mapping[str, Any]] = None,
+    ) -> TestResponse:
+        return self._request("GET", url, params=params, headers=headers)
 
-    def post(self, url: str, *, json: Any | None = None, data: Any | None = None) -> TestResponse:
-        return self._request("POST", url, json=json, data=data)
+    def post(
+        self,
+        url: str,
+        *,
+        json: Any | None = None,
+        data: Any | None = None,
+        headers: Optional[Mapping[str, Any]] = None,
+    ) -> TestResponse:
+        return self._request("POST", url, json=json, data=data, headers=headers)
 
-    def patch(self, url: str, *, json: Any | None = None) -> TestResponse:
-        return self._request("PATCH", url, json=json)
+    def patch(
+        self,
+        url: str,
+        *,
+        json: Any | None = None,
+        headers: Optional[Mapping[str, Any]] = None,
+    ) -> TestResponse:
+        return self._request("PATCH", url, json=json, headers=headers)
 
-    def delete(self, url: str) -> TestResponse:
-        return self._request("DELETE", url)
+    def delete(
+        self,
+        url: str,
+        *,
+        headers: Optional[Mapping[str, Any]] = None,
+    ) -> TestResponse:
+        return self._request("DELETE", url, headers=headers)
 
     def _request(
         self,
@@ -58,6 +82,7 @@ class TestClient:
         json: Any | None = None,
         data: Any | None = None,
         params: Mapping[str, Any] | None = None,
+        headers: Mapping[str, Any] | None = None,
     ) -> TestResponse:
         method = method.upper()
         path = url.split("?", 1)[0]
@@ -68,8 +93,19 @@ class TestClient:
         route, path_params = match
         cleanups: List[Any] = []
         error: Optional[BaseException] = None
+        should_raise = False
+        dependency_cache: Dict[Any, Tuple[Any, Optional[Any]]] = {}
         try:
-            kwargs = self._build_kwargs(route.endpoint, path_params, json=json, data=data, params=params, cleanups=cleanups)
+            kwargs = self._build_kwargs(
+                route.endpoint,
+                path_params,
+                json=json,
+                data=data,
+                params=params,
+                headers=headers,
+                dependency_cache=dependency_cache,
+                cleanups=cleanups,
+            )
             result = route.endpoint(**kwargs)
             status_code = route.status_code or 200
             if status_code == 204:
@@ -80,15 +116,17 @@ class TestClient:
             status_code = exc.status_code
             content = {"detail": exc.detail}
             error = exc
+            should_raise = False
         except Exception as exc:  # pragma: no cover - defensive default
             if isinstance(exc, AssertionError):
                 raise
-            status_code = HTTP_500_INTERNAL_SERVER_ERROR
-            content = {"detail": "Internal Server Error"}
             error = exc
+            should_raise = True
         finally:
             for cleanup in reversed(cleanups):
                 cleanup(error)
+        if error and should_raise:
+            raise error
         return TestResponse(status_code=status_code, content=content)
 
     def _build_kwargs(
@@ -99,6 +137,8 @@ class TestClient:
         json: Any | None,
         data: Any | None,
         params: Mapping[str, Any] | None,
+        headers: Mapping[str, Any] | None,
+        dependency_cache: Dict[Any, Tuple[Any, Optional[Any]]],
         cleanups: List[Any],
     ) -> Dict[str, Any]:
         sig = inspect.signature(endpoint)
@@ -109,7 +149,17 @@ class TestClient:
             default = param.default
             annotation = type_hints.get(name, param.annotation)
             if isinstance(default, Dependency):
-                value, cleanup = _resolve_dependency(default.dependency)
+                value, cleanup = _resolve_dependency(
+                    self,
+                    default.dependency,
+                    path_params,
+                    json=json,
+                    data=data,
+                    params=params,
+                    headers=headers,
+                    dependency_cache=dependency_cache,
+                    cleanups=cleanups,
+                )
                 values[name] = value
                 if cleanup is not None:
                     cleanups.append(cleanup)
@@ -117,6 +167,17 @@ class TestClient:
 
             if name in path_params:
                 values[name] = _convert_type(path_params[name], annotation)
+                continue
+
+            if isinstance(default, HeaderParam):
+                header_name = default.alias or name
+                header_payload = headers or {}
+                if header_name in header_payload:
+                    values[name] = _convert_type(header_payload[header_name], annotation)
+                elif default.default is ...:
+                    raise ValueError(f"Missing header: {header_name}")
+                else:
+                    values[name] = default.default
                 continue
 
             if isinstance(default, FormParam):
@@ -150,8 +211,33 @@ class TestClient:
         return values
 
 
-def _resolve_dependency(func: Any) -> Tuple[Any, Optional[Any]]:
-    value = func()
+def _resolve_dependency(
+    client: "TestClient",
+    func: Any,
+    path_params: Mapping[str, str],
+    *,
+    json: Any | None,
+    data: Any | None,
+    params: Mapping[str, Any] | None,
+    headers: Mapping[str, Any] | None,
+    dependency_cache: Dict[Any, Tuple[Any, Optional[Any]]],
+    cleanups: List[Any],
+) -> Tuple[Any, Optional[Any]]:
+    if func in dependency_cache:
+        cached_value, cached_cleanup = dependency_cache[func]
+        return cached_value, None
+
+    kwargs = client._build_kwargs(
+        func,
+        path_params,
+        json=json,
+        data=data,
+        params=params,
+        headers=headers,
+        dependency_cache=dependency_cache,
+        cleanups=cleanups,
+    )
+    value = func(**kwargs)
     if inspect.isgenerator(value):
         generator = value
         try:
@@ -170,7 +256,9 @@ def _resolve_dependency(func: Any) -> Tuple[Any, Optional[Any]]:
             except BaseException:
                 return
 
+        dependency_cache[func] = (provided, cleanup)
         return provided, cleanup
+    dependency_cache[func] = (value, None)
     return value, None
 
 

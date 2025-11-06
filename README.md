@@ -10,6 +10,8 @@ Project Empathy est une plate-forme SaaS destinée aux restaurateurs. Elle conne
 - **Prise de commandes et réservations** : stockage structuré, calcul des montants, suivi du statut et enregistrement du contexte d'appel.
 - **Abonnements Flexprice/Stripe** : synchronisation de plans, suivi des crédits, blocage des fonctionnalités en cas de dépassement.
 - **Dashboard restaurateur** : statistiques (nombre d'appels, commandes, panier moyen, CA) exposées via API pour le front React.
+- **Clés API rotatives** : génération, rotation et révocation de jetons par restaurant pour sécuriser l'accès au tableau de bord et aux intégrations externes.
+- **Notifications webhook** : endpoints configurables par restaurant, signatures HMAC et suivi des livraisons pour intégrer Project Empathy avec Zapier, Slack, POS ou CRM.
 
 ## Structure du dépôt
 
@@ -50,6 +52,8 @@ project/
    python -m project_empathy.cli init-db --seed-demo
    ```
 
+   La commande imprime la clé API de démonstration et l'enregistre dans `data/demo_api_key.txt`. Conservez-la pour accéder au tableau de bord.
+
 2. Lancez le serveur d'API (inclut une vérification automatique des tables) :
 
    ```bash
@@ -64,9 +68,30 @@ project/
    npm run dev
    ```
 
-4. Rendez-vous sur `http://localhost:5173` : un restaurant de démonstration, son menu, ses commandes et ses statistiques sont déjà chargés.
+4. Rendez-vous sur `http://localhost:5173`, collez la clé API démo dans la barre prévue puis sélectionnez le restaurant : les données (menu, commandes, réservations) s'affichent immédiatement.
 
 > Besoin de remettre la démo à zéro ? `python -m project_empathy.cli seed-demo --force` vide et recharge les données.
+
+### Notifications temps réel
+
+Chaque restaurant peut enregistrer des webhooks via le tableau de bord (onglet **Notifications en temps réel**) ou l'API REST (`/api/v1/restaurants/{id}/notifications/`). À chaque commande, réservation ou appel, Project Empathy envoie une requête POST signée avec HMAC SHA-256 (en-tête `X-ProjectEmpathy-Signature`) pour sécuriser l'intégration. Les tentatives sont historisées avec le statut HTTP et le dernier message d'erreur éventuel.
+
+Configurer un webhook depuis la CLI/HTTP :
+
+```bash
+curl -X POST \
+  -H "X-API-Key: <clé_api>" \
+  -H "Content-Type: application/json" \
+  http://localhost:8000/api/v1/restaurants/1/notifications/ \
+  -d '{
+    "name": "Zapier",
+    "target_url": "https://hooks.zapier.com/...",
+    "events": ["orders.created", "reservations.created"],
+    "secret": "change-me"
+  }'
+```
+
+Pour désactiver globalement les webhooks (par exemple en développement hors ligne), définissez `EMP_NOTIFICATIONS__ENABLED=false` ou modifiez la section `notifications` dans `config.yaml`.
 
 ## Installation backend
 
@@ -126,10 +151,11 @@ pytest
 Une interface en ligne de commande simplifie les opérations courantes :
 
 ```bash
-python -m project_empathy.cli init-db --seed-demo   # Créer les tables et charger la démo
-python -m project_empathy.cli seed-demo --force     # Régénérer les données d'exemple
-python -m project_empathy.cli config --json         # Afficher la configuration active
-python -m project_empathy.cli stats                 # Statistiques agrégées du premier restaurant
+python -m project_empathy.cli init-db --seed-demo      # Créer les tables et charger la démo (avec clé API)
+python -m project_empathy.cli seed-demo --force        # Régénérer les données d'exemple
+python -m project_empathy.cli config --json            # Afficher la configuration active
+python -m project_empathy.cli stats                    # Statistiques agrégées du premier restaurant
+python -m project_empathy.cli create-token 1 --name "Dashboard"  # Générer une clé API supplémentaire
 ```
 
 ## Orchestration Docker Compose

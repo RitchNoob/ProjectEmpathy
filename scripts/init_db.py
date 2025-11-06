@@ -27,9 +27,11 @@ def main() -> None:
     print(f"Tables créées sur {settings.database.url}")
 
     if args.seed_demo:
-        created = seed_demo_data(skip_existing=not args.force)
-        if created:
+        result = seed_demo_data(skip_existing=not args.force)
+        if result.created:
             print("Données de démonstration insérées ✔")
+            if result.api_key:
+                print(f"Clé API démo: {result.api_key}")
         else:
             print("Données déjà présentes – utilisez --force pour les recréer.")
 

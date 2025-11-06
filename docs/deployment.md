@@ -23,6 +23,7 @@
    EMP_TWILIO__ACCOUNT_SID=AC...
    EMP_TWILIO__AUTH_TOKEN=...
    EMP_FLEXPRICE__API_KEY=...
+   EMP_NOTIFICATIONS__ENABLED=true
    ```
 
 4. **Docker Compose prêt à l'emploi**
@@ -41,9 +42,16 @@
    docker compose exec api python -m project_empathy.cli seed-demo --force
    ```
 
+   Récupérez ensuite la clé API de démonstration (affichée dans les logs et stockée dans `data/demo_api_key.txt`). Vous pouvez également générer des clés supplémentaires :
+
+   ```bash
+   docker compose exec api python -m project_empathy.cli create-token 1 --name "Dashboard"
+   ```
+
 6. **Configurer Twilio**
    - Créer un numéro Voice et pointer les webhooks vers `https://votredomaine/api/v1/twilio/voice`.
    - Activer la transcription temps réel si disponible.
+   - Ouvrir les flux sortants HTTPS si les webhooks doivent joindre Zapier/Slack/CRM.
 
 7. **Certificats & HTTPS**
    - Utiliser Traefik ou Caddy pour le TLS automatique.

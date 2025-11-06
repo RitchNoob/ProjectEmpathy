@@ -29,3 +29,9 @@ application:
   storage:
     data_dir: "data"
     transcripts_dir: "data/transcripts"
+
+  notifications:
+    enabled: true
+    delivery_timeout: 10
+    signature_header: "X-ProjectEmpathy-Signature"
+    event_header: "X-ProjectEmpathy-Event"

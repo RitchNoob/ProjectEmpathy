@@ -1,5 +1,10 @@
 """Service layer exports."""
 
+from .notifications import (
+    NotificationDispatcher,
+    dispatch_notification,
+    get_notification_dispatcher,
+)
 from .orders import create_order, mark_order_status
 from .statistics import compute_dashboard_stats
 from .subscriptions import ensure_active_subscription, record_usage, sync_subscription_plan
@@ -24,6 +29,9 @@ __all__ = [
     "ensure_active_subscription",
     "record_usage",
     "sync_subscription_plan",
+    "dispatch_notification",
+    "get_notification_dispatcher",
+    "NotificationDispatcher",
     "TwilioCallContext",
     "build_greeting_response",
     "handle_transcription",

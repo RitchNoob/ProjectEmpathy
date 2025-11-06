@@ -14,23 +14,19 @@ from ..schemas import (
     MenuItemUpdate,
 )
 from ..db import get_session
+from .dependencies import require_authenticated_restaurant
 
 router = APIRouter(prefix="/restaurants/{restaurant_id}/menu", tags=["menu"])
 
 
-def _get_restaurant(session: Session, restaurant_id: int) -> Restaurant:
-    restaurant = session.get(Restaurant, restaurant_id)
-    if not restaurant:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Restaurant not found")
-    return restaurant
-
-
 @router.get("/items", response_model=list[MenuItemRead])
-def list_items(restaurant_id: int, session: Session = Depends(get_session)) -> list[MenuItem]:
-    _get_restaurant(session, restaurant_id)
+def list_items(
+    restaurant: Restaurant = Depends(require_authenticated_restaurant),
+    session: Session = Depends(get_session),
+) -> list[MenuItem]:
     return (
         session.query(MenuItem)
-        .filter(MenuItem.restaurant_id == restaurant_id)
+        .filter(MenuItem.restaurant_id == restaurant.id)
         .order_by(MenuItem.name.asc())
         .all()
     )
@@ -38,10 +34,11 @@ def list_items(restaurant_id: int, session: Session = Depends(get_session)) -> l
 
 @router.post("/items", response_model=MenuItemRead, status_code=status.HTTP_201_CREATED)
 def create_item(
-    restaurant_id: int, payload: MenuItemCreate, session: Session = Depends(get_session)
+    payload: MenuItemCreate,
+    restaurant: Restaurant = Depends(require_authenticated_restaurant),
+    session: Session = Depends(get_session),
 ) -> MenuItem:
-    restaurant = _get_restaurant(session, restaurant_id)
-    item = MenuItem(restaurant=restaurant, **payload.model_dump())
+    item = MenuItem(restaurant_id=restaurant.id, **payload.model_dump())
     session.add(item)
     session.flush()
     return item
@@ -49,14 +46,13 @@ def create_item(
 
 @router.patch("/items/{item_id}", response_model=MenuItemRead)
 def update_item(
-    restaurant_id: int,
     item_id: int,
     payload: MenuItemUpdate,
+    restaurant: Restaurant = Depends(require_authenticated_restaurant),
     session: Session = Depends(get_session),
 ) -> MenuItem:
-    _get_restaurant(session, restaurant_id)
     item = session.get(MenuItem, item_id)
-    if not item or item.restaurant_id != restaurant_id:
+    if not item or item.restaurant_id != restaurant.id:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Menu item not found")
     for key, value in payload.model_dump(exclude_unset=True).items():
         setattr(item, key, value)
@@ -66,11 +62,13 @@ def update_item(
 
 
 @router.get("/categories", response_model=list[MenuCategoryRead])
-def list_categories(restaurant_id: int, session: Session = Depends(get_session)) -> list[MenuCategory]:
-    _get_restaurant(session, restaurant_id)
+def list_categories(
+    restaurant: Restaurant = Depends(require_authenticated_restaurant),
+    session: Session = Depends(get_session),
+) -> list[MenuCategory]:
     return (
         session.query(MenuCategory)
-        .filter(MenuCategory.restaurant_id == restaurant_id)
+        .filter(MenuCategory.restaurant_id == restaurant.id)
         .order_by(MenuCategory.name.asc())
         .all()
     )
@@ -78,10 +76,11 @@ def list_categories(restaurant_id: int, session: Session = Depends(get_session))
 
 @router.post("/categories", response_model=MenuCategoryRead, status_code=status.HTTP_201_CREATED)
 def create_category(
-    restaurant_id: int, payload: MenuCategoryCreate, session: Session = Depends(get_session)
+    payload: MenuCategoryCreate,
+    restaurant: Restaurant = Depends(require_authenticated_restaurant),
+    session: Session = Depends(get_session),
 ) -> MenuCategory:
-    restaurant = _get_restaurant(session, restaurant_id)
-    category = MenuCategory(restaurant=restaurant, **payload.model_dump())
+    category = MenuCategory(restaurant_id=restaurant.id, **payload.model_dump())
     session.add(category)
     session.flush()
     return category

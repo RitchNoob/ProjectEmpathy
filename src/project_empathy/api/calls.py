@@ -8,23 +8,20 @@ from sqlalchemy.orm import Session
 from ..models import CallSession, Restaurant
 from ..schemas import CallSessionCreate, CallSessionRead
 from ..db import get_session
+from ..services.notifications import dispatch_notification
+from .dependencies import require_authenticated_restaurant
 
 router = APIRouter(prefix="/restaurants/{restaurant_id}/calls", tags=["calls"])
 
 
-def _get_restaurant(session: Session, restaurant_id: int) -> Restaurant:
-    restaurant = session.get(Restaurant, restaurant_id)
-    if not restaurant:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Restaurant not found")
-    return restaurant
-
-
 @router.get("/", response_model=list[CallSessionRead])
-def list_calls(restaurant_id: int, session: Session = Depends(get_session)) -> list[CallSession]:
-    _get_restaurant(session, restaurant_id)
+def list_calls(
+    restaurant: Restaurant = Depends(require_authenticated_restaurant),
+    session: Session = Depends(get_session),
+) -> list[CallSession]:
     return (
         session.query(CallSession)
-        .filter(CallSession.restaurant_id == restaurant_id)
+        .filter(CallSession.restaurant_id == restaurant.id)
         .order_by(CallSession.created_at.desc())
         .all()
     )
@@ -32,12 +29,19 @@ def list_calls(restaurant_id: int, session: Session = Depends(get_session)) -> l
 
 @router.post("/", response_model=CallSessionRead, status_code=status.HTTP_201_CREATED)
 def create_call_session(
-    restaurant_id: int, payload: CallSessionCreate, session: Session = Depends(get_session)
+    payload: CallSessionCreate,
+    restaurant: Restaurant = Depends(require_authenticated_restaurant),
+    session: Session = Depends(get_session),
 ) -> CallSession:
-    restaurant = _get_restaurant(session, restaurant_id)
-    call = CallSession(restaurant=restaurant, **payload.model_dump())
+    call = CallSession(restaurant_id=restaurant.id, **payload.model_dump())
     session.add(call)
     session.flush()
+    dispatch_notification(
+        session,
+        restaurant.id,
+        "calls.created",
+        CallSessionRead.model_validate(call).model_dump(),
+    )
     return call
 
 

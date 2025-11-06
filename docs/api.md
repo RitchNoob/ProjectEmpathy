@@ -4,7 +4,7 @@ Base URL : `https://{host}/api/v1`
 
 ## Authentification
 
-L'API s'appuie sur les abonnements Flexprice/Stripe. Chaque requête doit inclure un token d'API (non implémenté dans l'exemple). Ajoutez un proxy/API Gateway pour la gestion des clés.
+Les routes scellées par `/restaurants/{id}/...` exigent l'en-tête `X-API-Key` associé au restaurant ciblé. Les clés sont générées/rotées via la CLI (`python -m project_empathy.cli create-token`) ou via les endpoints décrits ci-dessous. Une réponse `401` est renvoyée si l'en-tête est absent ou invalide, `403` si la clé ne correspond pas au restaurant.
 
 ## Restaurants
 
@@ -125,6 +125,53 @@ Retourne :
   "total_revenue": 585.0
 }
 ```
+
+## Clés API
+
+### GET `/restaurants/{id}/api-tokens`
+Liste les clés actives associées au restaurant.
+
+### POST `/restaurants/{id}/api-tokens`
+Crée une nouvelle clé (retourne la valeur en clair une seule fois).
+
+```json
+{
+  "name": "Dashboard",
+  "token": "..."
+}
+```
+
+### POST `/restaurants/{id}/api-tokens/{token_id}/rotate`
+Invalide la clé actuelle et retourne la nouvelle valeur.
+
+### DELETE `/restaurants/{id}/api-tokens/{token_id}`
+Révoque la clé.
+
+## Notifications webhook
+
+### GET `/restaurants/{id}/notifications/`
+Liste les endpoints configurés pour le restaurant.
+
+### POST `/restaurants/{id}/notifications/`
+Crée un nouvel endpoint. Les événements disponibles sont `orders.created`, `orders.updated`, `reservations.created` et `calls.created`.
+
+```json
+{
+  "name": "Zapier",
+  "target_url": "https://hooks.zapier.com/...",
+  "events": ["orders.created", "reservations.created"],
+  "secret": "optionnel-pour-HMAC"
+}
+```
+
+### PATCH `/restaurants/{id}/notifications/{notification_id}`
+Met à jour le nom, l'URL, la liste d'événements ou active/désactive l'endpoint (`{"is_active": false}`).
+
+### POST `/restaurants/{id}/notifications/{notification_id}/test`
+Déclenche une notification test avec un payload personnalisé.
+
+### DELETE `/restaurants/{id}/notifications/{notification_id}`
+Supprime l'endpoint.
 
 ## Webhooks Twilio
 

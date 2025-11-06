@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
@@ -14,8 +15,10 @@ from .config import get_settings
 from .db import Base, SessionLocal, get_engine
 from .models import (
     CallSession,
+    ApiToken,
     MenuCategory,
     MenuItem,
+    NotificationEndpoint,
     Order,
     OrderItem,
     Reservation,
@@ -24,6 +27,14 @@ from .models import (
     SubscriptionPlan,
     UsageRecord,
 )
+from .services.auth import issue_api_token
+
+
+@dataclass
+class SeedResult:
+    created: bool
+    restaurant_id: int | None
+    api_key: str | None
 
 
 def create_schema(engine: Optional[object] = None) -> object:
@@ -37,7 +48,7 @@ def create_schema(engine: Optional[object] = None) -> object:
     return engine
 
 
-def seed_demo_data(session: Optional[Session] = None, *, skip_existing: bool = True) -> bool:
+def seed_demo_data(session: Optional[Session] = None, *, skip_existing: bool = True) -> SeedResult:
     """Populate the database with a realistic restaurant, menu and usage data."""
 
     close_session = False
@@ -46,8 +57,9 @@ def seed_demo_data(session: Optional[Session] = None, *, skip_existing: bool = T
         close_session = True
 
     try:
-        if skip_existing and session.execute(select(Restaurant.id).limit(1)).first():
-            return False
+        existing = session.query(Restaurant).order_by(Restaurant.id.asc()).first()
+        if skip_existing and existing:
+            return SeedResult(created=False, restaurant_id=existing.id, api_key=None)
 
         _purge_existing(session)
         now = datetime.utcnow()
@@ -126,6 +138,14 @@ def seed_demo_data(session: Optional[Session] = None, *, skip_existing: bool = T
             notes="Table près de la fenêtre",
         )
 
+        webhook = NotificationEndpoint(
+            restaurant=restaurant,
+            name="Zapier démo",
+            target_url="https://example.com/webhooks/project-empathy",
+            events=["orders.created", "reservations.created"],
+            secret="demo-secret",
+        )
+
         plan = SubscriptionPlan(
             external_id="flexprice-standard",
             name="Standard",
@@ -156,18 +176,25 @@ def seed_demo_data(session: Optional[Session] = None, *, skip_existing: bool = T
             ),
         ]
 
-        session.add_all([
-            restaurant,
-            plan,
-            subscription,
-            reservation,
-            call_session,
-            order,
-            *order_items,
-            *usage_records,
-        ])
+        session.add_all(
+            [
+                restaurant,
+                plan,
+                subscription,
+                reservation,
+                call_session,
+                order,
+                *order_items,
+                *usage_records,
+                webhook,
+            ]
+        )
+        session.flush()
+
+        _, api_key = issue_api_token(session, restaurant, "Tableau de bord démo")
         session.commit()
-        return True
+        _write_demo_api_key(api_key)
+        return SeedResult(created=True, restaurant_id=restaurant.id, api_key=api_key)
     finally:
         if close_session:
             session.close()
@@ -181,6 +208,8 @@ def _calculate_total(items: Iterable[OrderItem]) -> Decimal:
 def _purge_existing(session: Session) -> None:
     if session.execute(select(Restaurant.id).limit(1)).first():
         for model in (
+            ApiToken,
+            NotificationEndpoint,
             UsageRecord,
             Subscription,
             SubscriptionPlan,
@@ -202,4 +231,11 @@ def _ensure_storage_dirs() -> None:
         Path(directory).mkdir(parents=True, exist_ok=True)
 
 
-__all__ = ["create_schema", "seed_demo_data"]
+def _write_demo_api_key(api_key: str) -> None:
+    settings = get_settings()
+    target = settings.storage.data_dir / "demo_api_key.txt"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(api_key, encoding="utf-8")
+
+
+__all__ = ["create_schema", "seed_demo_data", "SeedResult"]

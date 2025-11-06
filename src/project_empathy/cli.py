@@ -14,6 +14,7 @@ from .bootstrap import create_schema, seed_demo_data
 from .config import ApplicationSettings, get_settings
 from .db import SessionLocal
 from .models import Restaurant
+from .services.auth import issue_api_token
 from .services.statistics import compute_dashboard_stats
 
 
@@ -40,6 +41,10 @@ def build_parser() -> argparse.ArgumentParser:
     server_parser.add_argument("--host", default="0.0.0.0")
     server_parser.add_argument("--port", type=int, default=8000)
     server_parser.add_argument("--reload", action="store_true", help="Active le rechargement auto (développement)")
+
+    token_parser = subparsers.add_parser("create-token", help="Génère une clé API pour un restaurant")
+    token_parser.add_argument("restaurant_id", type=int, help="Identifiant du restaurant")
+    token_parser.add_argument("--name", default="Clé API", help="Nom lisible de la clé")
 
     return parser
 
@@ -73,14 +78,20 @@ def main(argv: Optional[list[str]] = None) -> int:
     if args.command == "runserver":
         return _run_server(args.host, args.port, args.reload)
 
+    if args.command == "create-token":
+        return _create_token(args.restaurant_id, args.name)
+
     parser.print_help()
     return 1
 
 
 def _seed_demo(*, force: bool) -> None:
-    created = seed_demo_data(skip_existing=not force)
-    if created:
+    result = seed_demo_data(skip_existing=not force)
+    if result.created:
         print("✅ Données de démonstration prêtes")
+        if result.api_key:
+            print(f"🔑 Clé API de démonstration: {result.api_key}")
+            print("➡️  Elle est également sauvegardée dans data/demo_api_key.txt")
     else:
         print("ℹ️  Données déjà présentes (utilisez --force pour les régénérer)")
 
@@ -118,6 +129,17 @@ def _print_stats(restaurant_id: Optional[int]) -> int:
         stats = compute_dashboard_stats(session, target_id)
         print(json.dumps(stats.model_dump(), indent=2, ensure_ascii=False))
     return 0
+
+
+def _create_token(restaurant_id: int, name: str) -> int:
+    with _session_scope() as session:
+        restaurant = session.get(Restaurant, restaurant_id)
+        if restaurant is None:
+            print("Restaurant introuvable", file=sys.stderr)
+            return 1
+        _, api_key = issue_api_token(session, restaurant, name)
+        print(f"🔑 Nouvelle clé API pour {restaurant.name}: {api_key}")
+        return 0
 
 
 def _run_server(host: str, port: int, reload: bool) -> int:

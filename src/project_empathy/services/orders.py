@@ -7,7 +7,8 @@ from decimal import Decimal
 from sqlalchemy.orm import Session
 
 from ..models import MenuItem, Order, OrderItem, Restaurant
-from ..schemas import OrderCreate
+from ..schemas import OrderCreate, OrderRead
+from .notifications import dispatch_notification
 
 
 class OrderNotFoundError(RuntimeError):
@@ -22,7 +23,7 @@ def create_order(session: Session, restaurant: Restaurant, payload: OrderCreate)
     """Create an order, computing totals and validating menu availability."""
 
     order = Order(
-        restaurant=restaurant,
+        restaurant_id=restaurant.id,
         customer_name=payload.customer_name,
         customer_phone=payload.customer_phone,
         delivery_address=payload.delivery_address,
@@ -46,6 +47,12 @@ def create_order(session: Session, restaurant: Restaurant, payload: OrderCreate)
     order.total_amount = total
     session.add(order)
     session.flush()
+    dispatch_notification(
+        session,
+        restaurant.id,
+        "orders.created",
+        OrderRead.model_validate(order).model_dump(),
+    )
     return order
 
 
@@ -58,6 +65,12 @@ def mark_order_status(session: Session, order_id: int, status: str) -> Order:
     order.status = status
     session.add(order)
     session.flush()
+    dispatch_notification(
+        session,
+        order.restaurant_id,
+        "orders.updated",
+        OrderRead.model_validate(order).model_dump(),
+    )
     return order
 
 

@@ -66,6 +66,22 @@ class StorageSettings(BaseModel):
         return Path(value)
 
 
+class NotificationSettings(BaseModel):
+    """Settings governing outbound webhook notifications."""
+
+    enabled: bool = Field(default=True, description="Toggle outbound notifications globally")
+    delivery_timeout: int = Field(
+        default=10, description="HTTP timeout in seconds when delivering webhook calls"
+    )
+    signature_header: str = Field(
+        default="X-ProjectEmpathy-Signature",
+        description="Header used to transport the HMAC signature",
+    )
+    event_header: str = Field(
+        default="X-ProjectEmpathy-Event", description="Header carrying the event type"
+    )
+
+
 class ApplicationSettings(BaseSettings):
     """Top-level configuration for the backend service."""
 
@@ -80,6 +96,7 @@ class ApplicationSettings(BaseSettings):
     openai: OpenAISettings = Field(default_factory=OpenAISettings)
     flexprice: FlexpriceSettings = Field(default_factory=FlexpriceSettings)
     storage: StorageSettings = Field(default_factory=StorageSettings)
+    notifications: NotificationSettings = Field(default_factory=NotificationSettings)
 
     model_config = SettingsConfigDict(env_nested_delimiter="__", env_prefix="EMP_", env_file=".env")
 

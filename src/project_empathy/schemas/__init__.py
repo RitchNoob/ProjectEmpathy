@@ -6,7 +6,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import List, Optional
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, HttpUrl
 
 
 class MenuItemBase(BaseModel):
@@ -244,6 +244,69 @@ class DashboardStats(BaseModel):
     total_revenue: Decimal
 
 
+class ApiTokenBase(BaseModel):
+    name: str
+
+
+class ApiTokenCreate(ApiTokenBase):
+    pass
+
+
+class ApiTokenRead(ApiTokenBase):
+    id: int
+    prefix: str
+    revoked: bool
+    last_used_at: Optional[datetime] = None
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class ApiTokenProvisioned(BaseModel):
+    token: str
+    metadata: ApiTokenRead
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class NotificationEndpointBase(BaseModel):
+    name: str
+    target_url: HttpUrl
+    events: List[str] = Field(default_factory=lambda: ["orders.created", "orders.updated", "reservations.created"])
+    secret: Optional[str] = Field(default=None, description="Optional shared secret used for HMAC signing")
+
+
+class NotificationEndpointCreate(NotificationEndpointBase):
+    pass
+
+
+class NotificationEndpointUpdate(BaseModel):
+    name: Optional[str] = None
+    target_url: Optional[HttpUrl] = None
+    events: Optional[List[str]] = None
+    secret: Optional[str] = Field(default=None, description="Optional shared secret used for HMAC signing")
+    is_active: Optional[bool] = None
+
+
+class NotificationEndpointRead(NotificationEndpointBase):
+    id: int
+    restaurant_id: int
+    is_active: bool
+    last_status_code: Optional[int] = None
+    last_error: Optional[str] = None
+    last_delivery_at: Optional[datetime] = None
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class NotificationTestRequest(BaseModel):
+    event_type: str = "orders.created"
+    payload: dict = Field(default_factory=dict)
+
+
 __all__ = [
     "RestaurantCreate",
     "RestaurantRead",
@@ -268,4 +331,11 @@ __all__ = [
     "UsageRecordCreate",
     "UsageRecordRead",
     "DashboardStats",
+    "ApiTokenCreate",
+    "ApiTokenRead",
+    "ApiTokenProvisioned",
+    "NotificationEndpointCreate",
+    "NotificationEndpointRead",
+    "NotificationEndpointUpdate",
+    "NotificationTestRequest",
 ]

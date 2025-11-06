@@ -3,7 +3,7 @@
 from .applications import FastAPI
 from .dependencies import Depends
 from .exceptions import HTTPException
-from .params import Form
+from .params import Form, Header
 from .routing import APIRouter
 from .testclient import TestClient
 
@@ -17,6 +17,7 @@ __all__ = [
     "HTTPException",
     "TestClient",
     "Form",
+    "Header",
     "status",
     "CORSMiddleware",
 ]

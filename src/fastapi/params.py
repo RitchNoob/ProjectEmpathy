@@ -17,4 +17,13 @@ def Form(default: Any = ..., *, alias: Optional[str] = None, **extra: Any) -> Fo
     return FormParam(default=default, alias=alias, metadata=dict(extra))
 
 
-__all__ = ["Form", "FormParam"]
+@dataclass
+class HeaderParam(FormParam):
+    pass
+
+
+def Header(default: Any = ..., *, alias: Optional[str] = None, **extra: Any) -> HeaderParam:
+    return HeaderParam(default=default, alias=alias, metadata=dict(extra))
+
+
+__all__ = ["Form", "FormParam", "Header", "HeaderParam"]

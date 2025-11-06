@@ -6,7 +6,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Optional
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, Numeric, String, Text
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, JSON, Numeric, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ..db import Base
@@ -41,7 +41,15 @@ class Restaurant(Base, TimestampMixin):
     call_sessions: Mapped[list["CallSession"]] = relationship(back_populates="restaurant", cascade="all, delete-orphan")
     orders: Mapped[list["Order"]] = relationship(back_populates="restaurant", cascade="all, delete-orphan")
     reservations: Mapped[list["Reservation"]] = relationship(back_populates="restaurant", cascade="all, delete-orphan")
-    subscription: Mapped[Optional["Subscription"]] = relationship(back_populates="restaurant", uselist=False)
+    subscription: Mapped[Optional["Subscription"]] = relationship(
+        back_populates="restaurant", uselist=False
+    )
+    api_tokens: Mapped[list["ApiToken"]] = relationship(
+        back_populates="restaurant", cascade="all, delete-orphan"
+    )
+    notification_endpoints: Mapped[list["NotificationEndpoint"]] = relationship(
+        back_populates="restaurant", cascade="all, delete-orphan"
+    )
 
 
 class MenuCategory(Base, TimestampMixin):
@@ -195,6 +203,45 @@ class UsageRecord(Base, TimestampMixin):
     subscription: Mapped[Subscription] = relationship(back_populates="usage_records")
 
 
+class ApiToken(Base, TimestampMixin):
+    """API keys used by restaurateurs and integrations."""
+
+    __tablename__ = "api_tokens"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    restaurant_id: Mapped[int] = mapped_column(
+        ForeignKey("restaurants.id"), nullable=False, index=True
+    )
+    name: Mapped[str] = mapped_column(String(128), nullable=False)
+    prefix: Mapped[str] = mapped_column(String(16), nullable=False, index=True)
+    hashed_key: Mapped[str] = mapped_column(String(128), nullable=False)
+    last_used_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
+    revoked: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+
+    restaurant: Mapped[Restaurant] = relationship(back_populates="api_tokens")
+
+
+class NotificationEndpoint(Base, TimestampMixin):
+    """Outbound notification targets for restaurant events."""
+
+    __tablename__ = "notification_endpoints"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    restaurant_id: Mapped[int] = mapped_column(
+        ForeignKey("restaurants.id"), nullable=False, index=True
+    )
+    name: Mapped[str] = mapped_column(String(128), nullable=False)
+    target_url: Mapped[str] = mapped_column(String(1024), nullable=False)
+    events: Mapped[list[str]] = mapped_column(JSON, default=list)
+    secret: Mapped[Optional[str]] = mapped_column(String(128))
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    last_status_code: Mapped[Optional[int]] = mapped_column(Integer)
+    last_error: Mapped[Optional[str]] = mapped_column(Text)
+    last_delivery_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
+
+    restaurant: Mapped[Restaurant] = relationship(back_populates="notification_endpoints")
+
+
 __all__ = [
     "Restaurant",
     "MenuCategory",
@@ -206,4 +253,6 @@ __all__ = [
     "SubscriptionPlan",
     "Subscription",
     "UsageRecord",
+    "ApiToken",
+    "NotificationEndpoint",
 ]
