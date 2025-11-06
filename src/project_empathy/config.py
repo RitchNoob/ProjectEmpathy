@@ -6,7 +6,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import List, Optional
 
-from pydantic import BaseModel, Field, HttpUrl, validator
+from pydantic import BaseModel, Field, HttpUrl, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -61,7 +61,7 @@ class StorageSettings(BaseModel):
         default=Path("data/transcripts"), description="Directory for stored call transcripts."
     )
 
-    @validator("data_dir", "transcripts_dir", pre=True)
+    @field_validator("data_dir", "transcripts_dir", mode="before")
     def _ensure_path(cls, value: Path | str) -> Path:
         return Path(value)
 

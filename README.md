@@ -39,6 +39,35 @@ project/
 - PostgreSQL (prod) ou SQLite (développement)
 - Comptes Twilio, OpenAI/Mistral et Flexprice/Stripe
 
+## Démarrage rapide (clé en main)
+
+1. Créez et activez un environnement virtuel, installez les dépendances puis initialisez la base avec les données de démonstration :
+
+   ```bash
+   python -m venv .venv
+   source .venv/bin/activate
+   pip install -r requirements.txt
+   python -m project_empathy.cli init-db --seed-demo
+   ```
+
+2. Lancez le serveur d'API (inclut une vérification automatique des tables) :
+
+   ```bash
+   python -m project_empathy.cli runserver --host 127.0.0.1 --port 8000
+   ```
+
+3. Dans un autre terminal, démarrez le tableau de bord React :
+
+   ```bash
+   cd frontend
+   npm install
+   npm run dev
+   ```
+
+4. Rendez-vous sur `http://localhost:5173` : un restaurant de démonstration, son menu, ses commandes et ses statistiques sont déjà chargés.
+
+> Besoin de remettre la démo à zéro ? `python -m project_empathy.cli seed-demo --force` vide et recharge les données.
+
 ## Installation backend
 
 ```bash
@@ -46,7 +75,7 @@ python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 cp config.example.yaml config.yaml  # puis éditer
-uvicorn project_empathy.main:app --reload
+python -m project_empathy.cli runserver --reload
 ```
 
 ### Variables d'environnement
@@ -62,7 +91,7 @@ export EMP_TWILIO__AUTH_TOKEN="..."
 
 ## Base de données
 
-Le script `scripts/init_db.py` crée les tables SQLAlchemy.
+Le script `scripts/init_db.py` et la commande `python -m project_empathy.cli init-db` créent les tables SQLAlchemy. Ajoutez `--seed-demo` pour générer un restaurant complet en quelques secondes.
 
 ```bash
 python scripts/init_db.py
@@ -92,9 +121,30 @@ La documentation interactive est disponible sur `http://localhost:8000/docs` gr�
 pytest
 ```
 
+## CLI d'administration
+
+Une interface en ligne de commande simplifie les opérations courantes :
+
+```bash
+python -m project_empathy.cli init-db --seed-demo   # Créer les tables et charger la démo
+python -m project_empathy.cli seed-demo --force     # Régénérer les données d'exemple
+python -m project_empathy.cli config --json         # Afficher la configuration active
+python -m project_empathy.cli stats                 # Statistiques agrégées du premier restaurant
+```
+
+## Orchestration Docker Compose
+
+Pour obtenir un environnement complet (PostgreSQL + API + front React) en une commande :
+
+```bash
+docker compose up --build
+```
+
+Le service `api` initialise automatiquement la base et charge la démo si nécessaire. Le front est ensuite accessible sur `http://localhost:5173` et l'API sur `http://localhost:8000`.
+
 ## Déploiement
 
-- Construire l'image Docker (exemple dans `docs/deployment.md`).
+- Construire l'image Docker (exemple dans `docs/deployment.md` ou via `docker compose build`).
 - Configurer les variables d'environnement (voir ci-dessus).
 - Utiliser `ngrok http 8000` pour exposer le webhook Twilio en développement.
 - Activer HTTPS (Traefik, Caddy, nginx) en production.

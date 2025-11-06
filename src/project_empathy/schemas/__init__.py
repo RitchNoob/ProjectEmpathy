@@ -6,7 +6,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class MenuItemBase(BaseModel):
@@ -35,8 +35,7 @@ class MenuItemRead(MenuItemBase):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class MenuCategoryBase(BaseModel):
@@ -54,8 +53,7 @@ class MenuCategoryRead(MenuCategoryBase):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class RestaurantBase(BaseModel):
@@ -86,8 +84,7 @@ class RestaurantRead(RestaurantBase):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class OrderItemBase(BaseModel):
@@ -106,8 +103,7 @@ class OrderItemRead(OrderItemBase):
     updated_at: datetime
     menu_item: MenuItemRead
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class OrderBase(BaseModel):
@@ -130,8 +126,7 @@ class OrderRead(OrderBase):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class OrderStatusUpdate(BaseModel):
@@ -156,8 +151,7 @@ class ReservationRead(ReservationBase):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class CallSessionBase(BaseModel):
@@ -177,8 +171,7 @@ class CallSessionRead(CallSessionBase):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class SubscriptionPlanBase(BaseModel):
@@ -198,8 +191,7 @@ class SubscriptionPlanRead(SubscriptionPlanBase):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class SubscriptionBase(BaseModel):
@@ -221,8 +213,7 @@ class SubscriptionRead(SubscriptionBase):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class UsageRecordBase(BaseModel):
@@ -230,8 +221,7 @@ class UsageRecordBase(BaseModel):
     amount: int
     metadata: Optional[str] = Field(default=None, alias="metadata_payload")
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class UsageRecordCreate(UsageRecordBase):
@@ -244,9 +234,7 @@ class UsageRecordRead(UsageRecordBase):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
-        populate_by_name = True
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
 
 class DashboardStats(BaseModel):

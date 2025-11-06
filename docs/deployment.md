@@ -25,34 +25,20 @@
    EMP_FLEXPRICE__API_KEY=...
    ```
 
-4. **Docker Compose (exemple)**
-   ```yaml
-   version: "3.9"
-   services:
-     api:
-       build: .
-       command: uvicorn project_empathy.main:app --host 0.0.0.0 --port 8000
-       env_file: .env
-       ports:
-         - "8000:8000"
-       depends_on:
-         - db
-     db:
-       image: postgres:15
-       restart: unless-stopped
-       environment:
-         POSTGRES_USER: empathy
-         POSTGRES_PASSWORD: password
-         POSTGRES_DB: empathy
-       volumes:
-         - db_data:/var/lib/postgresql/data
-   volumes:
-     db_data:
+4. **Docker Compose prêt à l'emploi**
+   Un fichier `docker-compose.yaml` est fourni. Il installe PostgreSQL, l'API et le front.
+
+   ```bash
+   docker compose up --build -d
    ```
 
-5. **Initialiser la base**
+   L'API écoute sur `http://localhost:8000` et le tableau de bord sur `http://localhost:5173`.
+
+5. **Initialiser / recharger la démo**
+   Le service `api` exécute `python scripts/init_db.py --seed-demo` au démarrage. Pour forcer une régénération :
+
    ```bash
-   docker-compose run --rm api python scripts/init_db.py
+   docker compose exec api python -m project_empathy.cli seed-demo --force
    ```
 
 6. **Configurer Twilio**

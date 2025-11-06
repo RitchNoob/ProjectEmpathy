@@ -7,13 +7,14 @@ from sqlalchemy import create_engine
 
 from project_empathy.config import get_settings
 from project_empathy.main import create_app
-from project_empathy.db import Base, SessionLocal
+from project_empathy.db import Base, SessionLocal, reset_engine_cache
 
 
 @pytest.fixture(scope="session")
 def test_client():
     os.environ["EMP_DATABASE__URL"] = "sqlite:///:memory:"
     get_settings.cache_clear()  # type: ignore[attr-defined]
+    reset_engine_cache()
     engine = create_engine("sqlite:///:memory:", future=True)
     Base.metadata.create_all(bind=engine)
     SessionLocal.configure(bind=engine)  # type: ignore[attr-defined]
