@@ -1,12 +1,13 @@
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
-import RestaurantSelector from "./components/RestaurantSelector";
+
 import MenuManager from "./components/MenuManager";
-import OrdersView from "./components/OrdersView";
-import StatsCards from "./components/StatsCards";
-import ReservationsView from "./components/ReservationsView";
 import NotificationManager from "./components/NotificationManager";
-import { useEffect, useState } from "react";
+import OrdersView from "./components/OrdersView";
+import ReservationsView from "./components/ReservationsView";
+import RestaurantSelector from "./components/RestaurantSelector";
+import StatsCards from "./components/StatsCards";
 
 type Restaurant = {
   id: number;
@@ -62,39 +63,64 @@ function App() {
   });
 
   return (
-    <div className="container">
-      <header>
-        <h1>Project Empathy – Tableau de bord</h1>
-      </header>
-      <section className="api-key-bar">
-        <label htmlFor="api-key">Clé API</label>
-        <input
-          id="api-key"
-          value={draftKey}
-          onChange={(event) => setDraftKey(event.target.value)}
-          placeholder="Collez la clé fournie par la CLI"
-        />
-        <button type="button" onClick={() => setApiKey(draftKey.trim())}>
-          Enregistrer
-        </button>
-        {!apiKey && <p className="hint">Ajoutez votre clé API pour charger les données du restaurant.</p>}
-      </section>
-      <RestaurantSelector
-        restaurants={restaurants ?? []}
-        selectedId={restaurantId}
-        onSelect={setRestaurantId}
-      />
-      {restaurantId && (
-        <>
-          <StatsCards stats={stats} />
-          <div className="grid">
-            <MenuManager restaurantId={restaurantId} />
-            <OrdersView restaurantId={restaurantId} />
-            <ReservationsView restaurantId={restaurantId} />
-            <NotificationManager restaurantId={restaurantId} />
+    <div className="app-shell">
+      <main className="dashboard">
+        <header className="dashboard-hero">
+          <span className="hero-eyebrow">Pilotage en temps réel</span>
+          <h1 className="hero-title">Votre réceptionniste IA, sans effort</h1>
+          <p className="hero-subtitle">
+            Suivez les appels, commandes et réservations en direct. Ajustez votre carte, connectez vos
+            intégrations et gardez le contrôle sur votre expérience client depuis une interface raffinée.
+          </p>
+        </header>
+
+        <section className="module api-key-card">
+          <div className="module-header">
+            <div>
+              <h2 className="module-title">Connexion sécurisée</h2>
+              <p className="module-subtitle">
+                Collez la clé générée par la CLI Project Empathy pour charger les données de votre restaurant.
+              </p>
+            </div>
           </div>
-        </>
-      )}
+          <div className="api-key-form">
+            <label className="field-label" htmlFor="api-key">
+              Clé API
+            </label>
+            <div className="api-key-controls">
+              <input
+                id="api-key"
+                className="input"
+                value={draftKey}
+                onChange={(event) => setDraftKey(event.target.value)}
+                placeholder="pep_live_xxx..."
+              />
+              <button type="button" onClick={() => setApiKey(draftKey.trim())}>
+                Enregistrer
+              </button>
+            </div>
+            {!apiKey ? (
+              <p className="hint">Ajoutez votre clé pour activer le tableau de bord et vos intégrations.</p>
+            ) : (
+              <p className="hint success">Clé enregistrée. Les données sont synchronisées automatiquement.</p>
+            )}
+          </div>
+        </section>
+
+        <RestaurantSelector restaurants={restaurants ?? []} selectedId={restaurantId} onSelect={setRestaurantId} />
+
+        {restaurantId && (
+          <>
+            <StatsCards stats={stats} />
+            <div className="dashboard-grid">
+              <MenuManager restaurantId={restaurantId} />
+              <OrdersView restaurantId={restaurantId} />
+              <ReservationsView restaurantId={restaurantId} />
+              <NotificationManager restaurantId={restaurantId} />
+            </div>
+          </>
+        )}
+      </main>
     </div>
   );
 }

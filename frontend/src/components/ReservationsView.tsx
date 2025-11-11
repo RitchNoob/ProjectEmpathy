@@ -27,17 +27,26 @@ const ReservationsView = ({ restaurantId }: Props) => {
   });
 
   return (
-    <section className="card">
-      <h2>Réservations</h2>
+    <section className="module">
+      <div className="module-header">
+        <div>
+          <h2 className="module-title">Réservations</h2>
+          <p className="module-subtitle">Synchronisées avec vos intégrations partenaires.</p>
+        </div>
+      </div>
       <ul className="list">
         {(reservations ?? []).map((reservation) => (
           <li key={reservation.id}>
             <header className="list-header">
-              <strong>{reservation.guest_name}</strong>
-              <span>{new Date(reservation.reservation_time).toLocaleString()}</span>
-              <span>{reservation.guest_count} convives</span>
+              <div className="list-primary">
+                <strong>{reservation.guest_name}</strong>
+                <span className="muted small">{reservation.guest_count} convives</span>
+              </div>
+              <span className="badge badge-neutral">
+                {new Date(reservation.reservation_time).toLocaleString()}
+              </span>
             </header>
-            {reservation.notes && <p>{reservation.notes}</p>}
+            {reservation.notes && <p className="muted">{reservation.notes}</p>}
           </li>
         ))}
       </ul>

@@ -32,27 +32,40 @@ const OrdersView = ({ restaurantId }: Props) => {
   });
 
   return (
-    <section className="card">
-      <h2>Commandes</h2>
+    <section className="module">
+      <div className="module-header">
+        <div>
+          <h2 className="module-title">Commandes en cours</h2>
+          <p className="module-subtitle">Visualisez l&apos;activité de la salle et du click &amp; collect.</p>
+        </div>
+      </div>
       <ul className="list">
-        {(orders ?? []).map((order) => (
-          <li key={order.id}>
-            <header className="list-header">
-              <strong>#{order.id}</strong>
-              <span>{order.customer_name ?? "Sans nom"}</span>
-              <span className={`status status-${order.status}`}>{order.status}</span>
-              <span>{Number(order.total_amount).toFixed(2)} €</span>
-            </header>
-            <ul>
+        {(orders ?? []).map((order) => {
+          const statusClass = `badge-${order.status.toLowerCase()}`;
+          const statusLabel = order.status.replace(/_/g, " ");
+          return (
+            <li key={order.id}>
+              <header className="list-header">
+                <div className="list-primary">
+                  <strong>Commande #{order.id}</strong>
+                  <span className="muted small">{order.customer_name ?? "Sans nom"}</span>
+                </div>
+                <div className="list-secondary">
+                  <span className={`badge ${statusClass}`}>{statusLabel}</span>
+                  <span className="amount">{Number(order.total_amount).toFixed(2)} €</span>
+                </div>
+              </header>
+            <ul className="order-items">
               {order.items.map((item) => (
                 <li key={item.id}>
-                  {item.quantity}× {item.menu_item.name}
-                  {item.notes && <em> ({item.notes})</em>}
+                  <span>{item.quantity}× {item.menu_item.name}</span>
+                  {item.notes && <span className="muted small">{item.notes}</span>}
                 </li>
               ))}
             </ul>
-          </li>
-        ))}
+            </li>
+          );
+        })}
       </ul>
     </section>
   );

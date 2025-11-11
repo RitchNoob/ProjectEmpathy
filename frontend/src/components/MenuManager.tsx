@@ -49,33 +49,59 @@ const MenuManager = ({ restaurantId }: Props) => {
   };
 
   return (
-    <section className="card">
-      <h2>Menu</h2>
-      <form className="inline" onSubmit={onSubmit}>
-        <input
-          required
-          placeholder="Nom du plat"
-          value={formState.name}
-          onChange={(event) => setFormState({ ...formState, name: event.target.value })}
-        />
-        <input
-          type="number"
-          step="0.01"
-          required
-          placeholder="Prix"
-          value={formState.price}
-          onChange={(event) => setFormState({ ...formState, price: Number(event.target.value) })}
-        />
-        <button type="submit">Ajouter</button>
-      </form>
-      <ul className="list">
-        {(items ?? []).map((item) => (
-          <li key={item.id}>
-            <strong>{item.name}</strong> – {Number(item.price).toFixed(2)} €
-            {item.description && <p>{item.description}</p>}
-          </li>
-        ))}
-      </ul>
+    <section className="module">
+      <div className="module-header">
+        <div>
+          <h2 className="module-title">Carte & disponibilités</h2>
+          <p className="module-subtitle">Publiez vos nouveautés en quelques secondes.</p>
+        </div>
+      </div>
+      <div className="module-content">
+        <form className="form-grid" onSubmit={onSubmit}>
+          <div className="field">
+            <label className="field-label" htmlFor="menu-name">
+              Nom du plat
+            </label>
+            <input
+              id="menu-name"
+              className="input"
+              required
+              placeholder="Burger signature"
+              value={formState.name}
+              onChange={(event) => setFormState({ ...formState, name: event.target.value })}
+            />
+          </div>
+          <div className="field">
+            <label className="field-label" htmlFor="menu-price">
+              Prix
+            </label>
+            <input
+              id="menu-price"
+              type="number"
+              step="0.01"
+              className="input"
+              required
+              placeholder="14.90"
+              value={formState.price}
+              onChange={(event) => setFormState({ ...formState, price: Number(event.target.value) })}
+            />
+          </div>
+          <button type="submit" className="primary-action">
+            Ajouter au menu
+          </button>
+        </form>
+        <ul className="list">
+          {(items ?? []).map((item) => (
+            <li key={item.id}>
+              <div className="list-header">
+                <strong>{item.name}</strong>
+                <span className="badge">{Number(item.price).toFixed(2)} €</span>
+              </div>
+              {item.description && <p className="muted">{item.description}</p>}
+            </li>
+          ))}
+        </ul>
+      </div>
     </section>
   );
 };

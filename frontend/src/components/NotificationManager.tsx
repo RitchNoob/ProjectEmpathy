@@ -102,38 +102,62 @@ function NotificationManager({ restaurantId }: NotificationManagerProps) {
   };
 
   return (
-    <div className="card notifications">
-      <h2>Notifications en temps réel</h2>
-      <p className="muted">
-        Recevez automatiquement les commandes, réservations et informations d&apos;appel sur vos outils
-        internes (Zapier, Slack, POS...). Les notifications sont signées via HMAC pour sécuriser les intégrations.
-      </p>
-      <form className="inline" onSubmit={handleSubmit}>
-        <input
-          placeholder="Nom du webhook"
-          value={name}
-          onChange={(event) => setName(event.target.value)}
-          disabled={busy}
-        />
-        <input
-          placeholder="https://exemple.com/webhooks"
-          type="url"
-          value={url}
-          onChange={(event) => setUrl(event.target.value)}
-          disabled={busy}
-        />
-        <input
-          placeholder="Événements (séparés par des virgules)"
-          value={eventsInput}
-          onChange={(event) => setEventsInput(event.target.value)}
-          disabled={busy}
-        />
-        <button type="submit" disabled={busy}>
-          Ajouter
+    <section className="module notifications-module">
+      <div className="module-header">
+        <div>
+          <h2 className="module-title">Notifications en temps réel</h2>
+          <p className="module-subtitle">
+            Connectez vos outils métiers (POS, Slack, Zapier) et recevez les événements signés via HMAC.
+          </p>
+        </div>
+      </div>
+      <form className="form-grid" onSubmit={handleSubmit}>
+        <div className="field">
+          <label className="field-label" htmlFor="webhook-name">
+            Nom du webhook
+          </label>
+          <input
+            id="webhook-name"
+            className="input"
+            placeholder="Webhook principal"
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+            disabled={busy}
+          />
+        </div>
+        <div className="field">
+          <label className="field-label" htmlFor="webhook-url">
+            URL de destination
+          </label>
+          <input
+            id="webhook-url"
+            className="input"
+            placeholder="https://exemple.com/webhooks"
+            type="url"
+            value={url}
+            onChange={(event) => setUrl(event.target.value)}
+            disabled={busy}
+          />
+        </div>
+        <div className="field">
+          <label className="field-label" htmlFor="webhook-events">
+            Événements
+          </label>
+          <input
+            id="webhook-events"
+            className="input"
+            placeholder="orders.created,reservations.created"
+            value={eventsInput}
+            onChange={(event) => setEventsInput(event.target.value)}
+            disabled={busy}
+          />
+        </div>
+        <button type="submit" className="primary-action" disabled={busy}>
+          Ajouter un webhook
         </button>
       </form>
       {isLoading ? (
-        <p>Chargement des endpoints...</p>
+        <p className="muted">Chargement des endpoints...</p>
       ) : endpoints.length === 0 ? (
         <p className="muted">Aucun webhook configuré pour ce restaurant.</p>
       ) : (
@@ -141,25 +165,25 @@ function NotificationManager({ restaurantId }: NotificationManagerProps) {
           {endpoints.map((endpoint) => (
             <li key={endpoint.id} className="notification-item">
               <div className="list-header">
-                <div>
+                <div className="list-primary">
                   <strong>{endpoint.name}</strong>
                   <p className="muted small">{endpoint.target_url}</p>
                 </div>
-                <span className={`status ${endpoint.is_active ? "status-confirmed" : "status-pending"}`}>
-                  {endpoint.is_active ? "Actif" : "Inactif"}
+                <span className={`badge ${endpoint.is_active ? "badge-success" : "badge-warning"}`}>
+                  {endpoint.is_active ? "Actif" : "En pause"}
                 </span>
               </div>
               <div className="notification-meta">
-                <span>
+                <span className="muted small">
                   <strong>Événements :</strong> {endpoint.events.join(", ")}
                 </span>
                 {endpoint.last_delivery_at && (
-                  <span>
+                  <span className="muted small">
                     <strong>Dernier envoi :</strong> {new Date(endpoint.last_delivery_at).toLocaleString()}
                   </span>
                 )}
                 {endpoint.last_status_code !== null && (
-                  <span>
+                  <span className="muted small">
                     <strong>Dernier statut :</strong> {endpoint.last_status_code}
                   </span>
                 )}
@@ -194,7 +218,7 @@ function NotificationManager({ restaurantId }: NotificationManagerProps) {
           ))}
         </ul>
       )}
-    </div>
+    </section>
   );
 }
 

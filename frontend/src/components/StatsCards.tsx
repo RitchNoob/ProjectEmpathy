@@ -12,10 +12,30 @@ type Props = {
 };
 
 const cards = [
-  { key: "total_calls", label: "Appels" },
-  { key: "total_orders", label: "Commandes" },
-  { key: "average_order_value", label: "Panier moyen (€)" },
-  { key: "total_revenue", label: "Chiffre d'affaires (€)" }
+  {
+    key: "total_calls",
+    label: "Appels traités",
+    helper: "Conversations gérées par l'IA",
+    icon: "📞"
+  },
+  {
+    key: "total_orders",
+    label: "Commandes confirmées",
+    helper: "Ventes conclues pendant les appels",
+    icon: "🧾"
+  },
+  {
+    key: "average_order_value",
+    label: "Panier moyen (€)",
+    helper: "Montant moyen par commande",
+    icon: "💶"
+  },
+  {
+    key: "total_revenue",
+    label: "Chiffre d'affaires (€)",
+    helper: "Cumul généré ce mois-ci",
+    icon: "📈"
+  }
 ] as const;
 
 const formatValue = (key: keyof DashboardStats, value: number | string) => {
@@ -30,14 +50,18 @@ const formatValue = (key: keyof DashboardStats, value: number | string) => {
 };
 
 const StatsCards = ({ stats }: Props) => (
-  <section className="grid stats">
+  <section className="stats-grid">
     {cards.map((card) => (
-      <div key={card.key} className={clsx("card", "stat")}> 
-        <span className="label">{card.label}</span>
-        <strong>
-          {stats ? formatValue(card.key, stats[card.key]) : "—"}
-        </strong>
-      </div>
+      <article key={card.key} className={clsx("stat-card", !stats && "stat-card--empty")}>
+        <div className="stat-icon" aria-hidden>
+          {card.icon}
+        </div>
+        <div className="stat-content">
+          <p className="stat-label">{card.label}</p>
+          <p className="stat-value">{stats ? formatValue(card.key, stats[card.key]) : "—"}</p>
+          <p className="stat-helper">{card.helper}</p>
+        </div>
+      </article>
     ))}
   </section>
 );
