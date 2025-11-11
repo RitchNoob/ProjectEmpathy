@@ -1,91 +1,111 @@
-"""Configuration handling for Project Empathy."""
+"""Configuration models for the Project Empathy backend."""
 
 from __future__ import annotations
 
+from functools import lru_cache
 from pathlib import Path
 from typing import List, Optional
 
-import yaml
-from pydantic import BaseModel, Field, validator
-
-from .logging_utils import get_logger
-
-LOGGER = get_logger("config")
+from pydantic import BaseModel, Field, HttpUrl, field_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-class StorageConfig(BaseModel):
-    """Storage related configuration."""
+class DatabaseSettings(BaseModel):
+    """Database connectivity details."""
 
-    database_path: Path = Field(default=Path("data/empathy.db"))
-    raw_table: str = Field(default="articles_raw")
-    clean_table: str = Field(default="articles_clean")
-    analyzed_table: str = Field(default="articles_analyzed")
-    data_dir: Path = Field(default=Path("data"))
-    outputs_dir: Path = Field(default=Path("outputs"))
-
-
-class NewsConfig(BaseModel):
-    """News related configuration."""
-
-    start_date: str
-    end_date: str
-    languages: List[str] = Field(default_factory=lambda: ["en", "ms", "zh"])
-    keywords: List[str]
-    domains: List[str]
-    request_interval_seconds: float = 3.0
-    robots_cache_hours: int = 12
-
-    @validator("languages", each_item=True)
-    def lower_lang(cls, value: str) -> str:  # noqa: D401
-        """Lowercase language codes."""
-
-        return value.lower()
+    url: str = Field(
+        default="sqlite:///./empathy.db",
+        description="SQLAlchemy database URL. Defaults to a local SQLite database.",
+    )
+    echo: bool = Field(default=False, description="Enable SQL logging for debugging.")
 
 
-class PipelineConfig(BaseModel):
-    """Pipeline stage configuration."""
+class TwilioSettings(BaseModel):
+    """Twilio account configuration."""
 
-    translate_non_english: bool = True
-    tfidf_top_k: int = 20
-    cooccurrence_window: int = 2
-    sentiment_time_window: str = "D"
-    min_article_length: int = 300
-    chunk_size: int = 50
-
-
-class ReportConfig(BaseModel):
-    """Report metadata configuration."""
-
-    title: str = "Project Empathy Report"
-    description: Optional[str] = None
+    account_sid: str = Field(default="", description="Twilio Account SID")
+    auth_token: str = Field(default="", description="Twilio Auth Token")
+    voice_phone_number: str = Field(default="", description="Provisioned Twilio number")
+    status_callback_url: Optional[HttpUrl] = Field(
+        default=None, description="Optional callback URL for call status updates."
+    )
 
 
-class AppConfig(BaseModel):
-    """Root application configuration."""
+class OpenAISettings(BaseModel):
+    """Large language model integration settings."""
 
-    storage: StorageConfig = Field(default_factory=StorageConfig)
-    news: NewsConfig
-    pipeline: PipelineConfig = Field(default_factory=PipelineConfig)
-    report: ReportConfig = Field(default_factory=ReportConfig)
-
-
-def load_config(path: Path) -> AppConfig:
-    """Load application configuration from YAML file."""
-
-    LOGGER.info("Loading configuration from %s", path)
-    with path.open("r", encoding="utf-8") as file:
-        raw = yaml.safe_load(file)
-    config = AppConfig(**raw)
-    LOGGER.debug("Loaded configuration: %s", config.json())
-    return config
+    api_key: str = Field(default="", description="OpenAI API key or compatible provider key")
+    model: str = Field(
+        default="gpt-4o-mini",
+        description="Chat completion model identifier (OpenAI or equivalent).",
+    )
+    request_timeout: int = Field(default=60, description="Timeout in seconds for API calls.")
 
 
-def write_default_config(path: Path) -> None:
-    """Write default configuration example to the provided path."""
+class FlexpriceSettings(BaseModel):
+    """Flexprice subscription platform configuration."""
 
-    LOGGER.info("Writing default configuration to %s", path)
-    example_path = Path(__file__).resolve().parents[2] / "config.example.yaml"
-    if not example_path.exists():
-        raise FileNotFoundError("config.example.yaml not found")
-    content = example_path.read_text(encoding="utf-8")
-    path.write_text(content, encoding="utf-8")
+    base_url: HttpUrl = Field(default="https://api.flexprice.io", description="Flexprice API base URL")
+    api_key: str = Field(default="", description="Flexprice API token")
+    product_id: Optional[str] = Field(
+        default=None,
+        description="Optional Flexprice product identifier to associate plans with.",
+    )
+
+
+class StorageSettings(BaseModel):
+    """Paths for exported assets."""
+
+    data_dir: Path = Field(default=Path("data"), description="Directory for structured data.")
+    transcripts_dir: Path = Field(
+        default=Path("data/transcripts"), description="Directory for stored call transcripts."
+    )
+
+    @field_validator("data_dir", "transcripts_dir", mode="before")
+    def _ensure_path(cls, value: Path | str) -> Path:
+        return Path(value)
+
+
+class NotificationSettings(BaseModel):
+    """Settings governing outbound webhook notifications."""
+
+    enabled: bool = Field(default=True, description="Toggle outbound notifications globally")
+    delivery_timeout: int = Field(
+        default=10, description="HTTP timeout in seconds when delivering webhook calls"
+    )
+    signature_header: str = Field(
+        default="X-ProjectEmpathy-Signature",
+        description="Header used to transport the HMAC signature",
+    )
+    event_header: str = Field(
+        default="X-ProjectEmpathy-Event", description="Header carrying the event type"
+    )
+
+
+class ApplicationSettings(BaseSettings):
+    """Top-level configuration for the backend service."""
+
+    debug: bool = Field(default=False, description="Enable FastAPI debug mode")
+    secret_key: str = Field(
+        default="change-me", description="Secret key for session signing and auth tokens"
+    )
+    allowed_origins: List[str] = Field(default_factory=lambda: ["*"], description="CORS origins")
+
+    database: DatabaseSettings = Field(default_factory=DatabaseSettings)
+    twilio: TwilioSettings = Field(default_factory=TwilioSettings)
+    openai: OpenAISettings = Field(default_factory=OpenAISettings)
+    flexprice: FlexpriceSettings = Field(default_factory=FlexpriceSettings)
+    storage: StorageSettings = Field(default_factory=StorageSettings)
+    notifications: NotificationSettings = Field(default_factory=NotificationSettings)
+
+    model_config = SettingsConfigDict(env_nested_delimiter="__", env_prefix="EMP_", env_file=".env")
+
+
+@lru_cache
+def get_settings() -> ApplicationSettings:
+    """Return cached application settings."""
+
+    return ApplicationSettings()
+
+
+__all__ = ["ApplicationSettings", "get_settings"]

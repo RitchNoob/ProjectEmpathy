@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Project Empathy · Tableau de bord</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="top-bar">
+        <div class="top-bar__brand">
+          <span class="top-bar__dot"></span>
+          <span class="top-bar__title">Project Empathy</span>
+        </div>
+        <div class="top-bar__status" id="status">
+          <span class="status__message status__message--info" id="loading-message">
+            ⏳ Initialisation du tableau de bord…
+          </span>
+          <span class="status__message status__message--error hidden" id="error-message"></span>
+          <span class="status__message status__message--success hidden" id="success-message">
+            ✅ Démo prête. Actualisez après un appel pour suivre l'impact instantanément.
+          </span>
+        </div>
+      </header>
+
+      <section class="hero">
+        <div class="hero__intro">
+          <p class="hero__eyebrow">Cockpit opérateur 2025</p>
+          <h1 class="hero__title" id="restaurant-name">Project Empathy</h1>
+          <p class="hero__subtitle" id="restaurant-description">
+            Démarrez les appels intelligents, les commandes et les réservations en un clic.
+          </p>
+          <dl class="hero__meta">
+            <div>
+              <dt>Téléphone</dt>
+              <dd id="restaurant-phone">—</dd>
+            </div>
+            <div>
+              <dt>Adresse</dt>
+              <dd id="restaurant-address">—</dd>
+            </div>
+          </dl>
+        </div>
+        <aside class="hero__panel">
+          <div class="hero__panel-gradient"></div>
+          <div class="hero__panel-content">
+            <span class="hero__panel-badge">Concierge IA</span>
+            <h2 id="persona-name">Concierge Empathy</h2>
+            <p id="persona-greeting">
+              Notre réceptionniste virtuel accueille vos clients 24/7, confirme les commandes et augmente votre panier moyen.
+            </p>
+            <ul class="hero__panel-list">
+              <li id="persona-tone">Ton : chaleureux et premium</li>
+              <li id="persona-languages">Langues : français</li>
+              <li id="persona-upsell">Mises en avant : desserts signature, vins premium</li>
+            </ul>
+          </div>
+        </aside>
+      </section>
+
+      <main class="main-content">
+        <section class="stats-grid" id="stats-grid"></section>
+
+        <section class="panel" id="profile-panel">
+          <header class="panel__header">
+          <div>
+            <p class="panel__eyebrow">Personnalisation avancée</p>
+            <h2>Designer du réceptionniste</h2>
+            <p>Affinez le ton, la signature et les couleurs de votre concierge virtuel en temps réel.</p>
+          </div>
+          <div class="panel__actions">
+            <span class="badge badge--muted" id="profile-dirty-indicator">Synchronisation…</span>
+            <button class="button button--ghost" type="button" id="profile-reset">Réinitialiser</button>
+            <button class="button" type="submit" form="profile-form" id="profile-save">Enregistrer</button>
+          </div>
+        </header>
+
+        <div class="profile-grid">
+          <article class="persona-card" id="persona-card">
+            <div class="persona-card__header">
+              <span class="persona-card__badge">Prévisualisation live</span>
+              <h3 class="persona-card__title" id="persona-card-name">Concierge Empathy</h3>
+            </div>
+            <p class="persona-card__greeting" id="persona-card-greeting"></p>
+            <div class="persona-card__details">
+              <p><strong>Signature :</strong> <span id="persona-card-signature">—</span></p>
+              <p><strong>Clôture :</strong> <span id="persona-card-closing">—</span></p>
+            </div>
+            <div class="persona-card__chips" id="persona-card-upsell"></div>
+          </article>
+
+          <form class="profile-form" id="profile-form">
+              <div class="form-group">
+                <label for="profile-display-name">Nom du réceptionniste</label>
+                <input id="profile-display-name" name="display_name" type="text" maxlength="128" />
+              </div>
+              <div class="form-group">
+                <label for="profile-greeting">Phrase d'accueil</label>
+                <textarea id="profile-greeting" name="greeting" rows="2"></textarea>
+              </div>
+              <div class="form-group">
+                <label for="profile-closing">Clôture standard</label>
+                <textarea id="profile-closing" name="closing_remark" rows="2"></textarea>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="profile-tone">Ton</label>
+                  <input id="profile-tone" name="tone" type="text" />
+                </div>
+                <div class="form-group">
+                  <label for="profile-voice">Voix synthèse</label>
+                  <input id="profile-voice" name="voice_name" type="text" placeholder="alice" />
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="profile-language-primary">Langue principale</label>
+                  <input id="profile-language-primary" name="primary_language" type="text" placeholder="fr-FR" />
+                </div>
+                <div class="form-group">
+                  <label for="profile-language-secondary">Langue secondaire</label>
+                  <input id="profile-language-secondary" name="secondary_language" type="text" placeholder="en-US" />
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="profile-personality">Personnalité</label>
+                <textarea id="profile-personality" name="personality" rows="2"></textarea>
+              </div>
+              <div class="form-group">
+                <label for="profile-upsell">Ventes additionnelles (une par ligne)</label>
+                <textarea id="profile-upsell" name="upsell_phrases" rows="3"></textarea>
+              </div>
+              <div class="form-group">
+                <label for="profile-instructions">Instructions spécifiques</label>
+                <textarea id="profile-instructions" name="custom_instructions" rows="3"></textarea>
+              </div>
+              <div class="form-row form-row--compact">
+                <div class="form-group">
+                  <label for="profile-primary-color">Couleur principale</label>
+                  <input id="profile-primary-color" name="brand_primary_color" type="color" />
+                </div>
+                <div class="form-group">
+                  <label for="profile-accent-color">Accent</label>
+                  <input id="profile-accent-color" name="brand_accent_color" type="color" />
+                </div>
+                <div class="form-group">
+                  <label for="profile-background-color">Fond</label>
+                  <input id="profile-background-color" name="brand_background_color" type="color" />
+                </div>
+                <div class="form-group">
+                  <label for="profile-text-color">Texte</label>
+                  <input id="profile-text-color" name="brand_text_color" type="color" />
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="profile-signature">Signature</label>
+                <input id="profile-signature" name="signature" type="text" />
+              </div>
+              <p class="profile-feedback hidden" id="profile-feedback"></p>
+            </form>
+
+          <article class="profile-playbook hidden" id="profile-playbook">
+            <div class="profile-playbook__header">
+              <span class="profile-playbook__badge">Playbook IA</span>
+              <h3>Playbook conversationnel</h3>
+              <p>Prévisualisez le script généré par l'assistant en fonction de vos réglages.</p>
+            </div>
+            <div class="profile-playbook__meta">
+              <span id="profile-preview-tone">Ton : —</span>
+              <span id="profile-preview-voice">Voix : —</span>
+              <span id="profile-preview-languages">Langues : —</span>
+            </div>
+            <div class="profile-playbook__section">
+              <h4>Accueil type</h4>
+              <p id="profile-preview-greeting">—</p>
+            </div>
+            <div class="profile-playbook__section">
+              <h4>Clôture</h4>
+              <p id="profile-preview-closing">—</p>
+            </div>
+            <div class="profile-playbook__section hidden" id="profile-preview-instructions-container">
+              <h4>Notes spécifiques</h4>
+              <p id="profile-preview-instructions"></p>
+            </div>
+            <div class="profile-playbook__section profile-playbook__section--signature">
+              <h4>Signature</h4>
+              <p id="profile-preview-signature">—</p>
+            </div>
+            <div class="profile-playbook__prompt-wrapper">
+              <h4>Brief IA</h4>
+              <pre class="profile-playbook__prompt" id="profile-preview-prompt"></pre>
+            </div>
+          </article>
+        </div>
+      </section>
+
+        <section class="content-grid">
+          <article class="card" id="menu-card">
+            <header class="card__header">
+              <div>
+                <h2>Menu du restaurant</h2>
+                <p>Articles mis en avant par l'agent conversationnel.</p>
+              </div>
+              <span class="card__badge" id="menu-count">0 article</span>
+            </header>
+            <div class="card__body" id="menu-list"></div>
+          </article>
+
+          <article class="card" id="orders-card">
+            <header class="card__header">
+              <div>
+                <h2>Commandes récentes</h2>
+                <p>Suivez les ventes saisies via les appels.</p>
+              </div>
+              <span class="card__badge" id="orders-count">0 commande</span>
+            </header>
+            <div class="card__body" id="orders-list"></div>
+          </article>
+
+          <article class="card" id="reservations-card">
+            <header class="card__header">
+              <div>
+                <h2>Réservations à venir</h2>
+                <p>Les demandes confirmées par votre réceptionniste IA.</p>
+              </div>
+              <span class="card__badge" id="reservations-count">0 réservation</span>
+            </header>
+            <div class="card__body" id="reservations-list"></div>
+          </article>
+        </section>
+      </main>
+
+      <footer class="footer">
+        <div class="footer__left">
+          <strong>Project Empathy</strong>
+          <span class="dot">•</span>
+          <span id="footer-restaurant">Assistant IA restaurant</span>
+        </div>
+        <div class="footer__right">
+          <span>Contact support : <a href="mailto:support@projectempathy.test">support@projectempathy.test</a></span>
+        </div>
+      </footer>
+    </div>
+
+    <script src="app.js" defer></script>
+  </body>
+</html>
