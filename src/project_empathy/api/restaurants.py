@@ -5,7 +5,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from ..models import Restaurant
+from ..models import ReceptionistProfile, Restaurant
 from ..schemas import RestaurantCreate, RestaurantRead, RestaurantUpdate
 from ..db import get_session
 from .dependencies import optional_authenticated_restaurant, require_authenticated_restaurant
@@ -27,6 +27,8 @@ def list_restaurants(
 def create_restaurant(payload: RestaurantCreate, session: Session = Depends(get_session)) -> Restaurant:
     restaurant = Restaurant(**payload.model_dump())
     session.add(restaurant)
+    if restaurant.receptionist_profile is None:
+        session.add(ReceptionistProfile(restaurant=restaurant))
     session.flush()
     return restaurant
 

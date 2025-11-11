@@ -87,6 +87,57 @@ class RestaurantRead(RestaurantBase):
     model_config = ConfigDict(from_attributes=True)
 
 
+class ReceptionistProfileBase(BaseModel):
+    display_name: str = Field(default="Empathy Concierge", max_length=128)
+    greeting: str = Field(
+        default="Bonjour et bienvenue chez nous ! Je suis votre réceptionniste virtuel, comment puis-je vous guider ?"
+    )
+    closing_remark: str = Field(
+        default="Merci pour votre appel, nous avons hâte de vous accueillir. Excellente journée !"
+    )
+    tone: str = Field(default="Chaleureux et premium", max_length=64)
+    personality: str = Field(
+        default="Incarne un concierge cinq étoiles, empathique, proactif et orienté solution."
+    )
+    primary_language: str = Field(default="fr-FR", max_length=32)
+    secondary_language: Optional[str] = Field(default=None, max_length=32)
+    voice_name: str = Field(default="alice", max_length=64)
+    upsell_phrases: List[str] = Field(default_factory=list)
+    signature: Optional[str] = None
+    custom_instructions: Optional[str] = None
+    brand_primary_color: str = Field(default="#5B5CFF", max_length=16)
+    brand_accent_color: str = Field(default="#21D4FD", max_length=16)
+    brand_background_color: str = Field(default="#06071B", max_length=16)
+    brand_text_color: str = Field(default="#F8FAFF", max_length=16)
+
+
+class ReceptionistProfileRead(ReceptionistProfileBase):
+    id: int
+    restaurant_id: int
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class ReceptionistProfileUpdate(BaseModel):
+    display_name: Optional[str] = Field(default=None, max_length=128)
+    greeting: Optional[str] = None
+    closing_remark: Optional[str] = None
+    tone: Optional[str] = Field(default=None, max_length=64)
+    personality: Optional[str] = None
+    primary_language: Optional[str] = Field(default=None, max_length=32)
+    secondary_language: Optional[str] = Field(default=None, max_length=32)
+    voice_name: Optional[str] = Field(default=None, max_length=64)
+    upsell_phrases: Optional[List[str]] = None
+    signature: Optional[str] = None
+    custom_instructions: Optional[str] = None
+    brand_primary_color: Optional[str] = Field(default=None, max_length=16)
+    brand_accent_color: Optional[str] = Field(default=None, max_length=16)
+    brand_background_color: Optional[str] = Field(default=None, max_length=16)
+    brand_text_color: Optional[str] = Field(default=None, max_length=16)
+
+
 class OrderItemBase(BaseModel):
     menu_item_id: int
     quantity: int = Field(default=1, ge=1)

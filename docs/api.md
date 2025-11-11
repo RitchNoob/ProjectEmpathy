@@ -24,6 +24,49 @@ Crée un restaurant.
 }
 ```
 
+## Réceptionniste IA
+
+### GET `/restaurants/{id}/receptionist/profile`
+Retourne le profil IA associé au restaurant (nom, tonalité, langues, upsell, couleurs).
+
+```json
+{
+  "id": 1,
+  "restaurant_id": 1,
+  "display_name": "Concierge Lumière",
+  "greeting": "Bonjour, comment puis-je sublimer votre expérience ?",
+  "closing_remark": "Merci pour votre appel, à très vite !",
+  "tone": "Chaleureux et haute couture",
+  "primary_language": "fr-FR",
+  "secondary_language": "en-US",
+  "voice_name": "alice",
+  "upsell_phrases": [
+    "Menu dégustation",
+    "Accord mets & vins"
+  ],
+  "brand_primary_color": "#7060FF",
+  "brand_accent_color": "#38E8FF",
+  "brand_background_color": "#050713",
+  "brand_text_color": "#F5F7FF"
+}
+```
+
+### PATCH `/restaurants/{id}/receptionist/profile`
+Met à jour partiellement le profil (tous les champs sont optionnels dans la requête).
+
+```json
+{
+  "greeting": "Bienvenue au Bistrot Démo, je suis votre concierge virtuel.",
+  "upsell_phrases": [
+    "Proposer le dessert signature",
+    "Suggérer l'accord mets & vins premium"
+  ],
+  "custom_instructions": "Confirmer l'heure et proposer un dessert maison.",
+  "brand_primary_color": "#5B5CFF",
+  "brand_accent_color": "#21D4FD"
+}
+```
+
 ## Menu
 
 ### GET `/restaurants/{id}/menu/items`

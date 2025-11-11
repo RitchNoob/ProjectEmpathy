@@ -50,6 +50,9 @@ class Restaurant(Base, TimestampMixin):
     notification_endpoints: Mapped[list["NotificationEndpoint"]] = relationship(
         back_populates="restaurant", cascade="all, delete-orphan"
     )
+    receptionist_profile: Mapped[Optional["ReceptionistProfile"]] = relationship(
+        back_populates="restaurant", cascade="all, delete-orphan", uselist=False
+    )
 
 
 class MenuCategory(Base, TimestampMixin):
@@ -242,6 +245,49 @@ class NotificationEndpoint(Base, TimestampMixin):
     restaurant: Mapped[Restaurant] = relationship(back_populates="notification_endpoints")
 
 
+class ReceptionistProfile(Base, TimestampMixin):
+    """Persona and branding for the AI receptionist."""
+
+    __tablename__ = "receptionist_profiles"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    restaurant_id: Mapped[int] = mapped_column(
+        ForeignKey("restaurants.id"), nullable=False, unique=True, index=True
+    )
+    display_name: Mapped[str] = mapped_column(String(128), default="Empathy Concierge", nullable=False)
+    greeting: Mapped[str] = mapped_column(
+        Text,
+        default="Bonjour et bienvenue chez nous ! Je suis votre réceptionniste virtuel, comment puis-je vous guider ?",
+        nullable=False,
+    )
+    closing_remark: Mapped[str] = mapped_column(
+        Text,
+        default="Merci pour votre appel, nous avons hâte de vous accueillir. Excellente journée !",
+        nullable=False,
+    )
+    tone: Mapped[str] = mapped_column(String(64), default="Chaleureux et premium", nullable=False)
+    personality: Mapped[str] = mapped_column(
+        Text,
+        default="Incarne un concierge cinq étoiles, empathique, proactif et orienté solution.",
+        nullable=False,
+    )
+    primary_language: Mapped[str] = mapped_column(String(32), default="fr-FR", nullable=False)
+    secondary_language: Mapped[Optional[str]] = mapped_column(String(32))
+    voice_name: Mapped[str] = mapped_column(String(64), default="alice", nullable=False)
+    upsell_phrases: Mapped[list[str]] = mapped_column(JSON, default=list)
+    signature: Mapped[Optional[str]] = mapped_column(
+        Text,
+        default="Votre concierge Project Empathy",
+    )
+    custom_instructions: Mapped[Optional[str]] = mapped_column(Text)
+    brand_primary_color: Mapped[str] = mapped_column(String(16), default="#5B5CFF", nullable=False)
+    brand_accent_color: Mapped[str] = mapped_column(String(16), default="#21D4FD", nullable=False)
+    brand_background_color: Mapped[str] = mapped_column(String(16), default="#06071B", nullable=False)
+    brand_text_color: Mapped[str] = mapped_column(String(16), default="#F8FAFF", nullable=False)
+
+    restaurant: Mapped[Restaurant] = relationship(back_populates="receptionist_profile")
+
+
 __all__ = [
     "Restaurant",
     "MenuCategory",
@@ -255,4 +301,5 @@ __all__ = [
     "UsageRecord",
     "ApiToken",
     "NotificationEndpoint",
+    "ReceptionistProfile",
 ]

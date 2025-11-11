@@ -11,6 +11,7 @@ from . import (
     menu,
     notifications,
     orders,
+    receptionist,
     reservations,
     restaurants,
     subscriptions,
@@ -29,6 +30,7 @@ def get_api_router() -> APIRouter:
     router.include_router(subscriptions.router)
     router.include_router(dashboard.router)
     router.include_router(notifications.router)
+    router.include_router(receptionist.router)
     router.include_router(twilio.router)
     return router
 

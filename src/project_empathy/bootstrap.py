@@ -21,6 +21,7 @@ from .models import (
     NotificationEndpoint,
     Order,
     OrderItem,
+    ReceptionistProfile,
     Reservation,
     Restaurant,
     Subscription,
@@ -70,6 +71,34 @@ def seed_demo_data(session: Optional[Session] = None, *, skip_existing: bool = T
             timezone="Europe/Paris",
             address="12 Rue de la Demo, 75000 Paris",
             twilio_phone_number="+33111222333",
+        )
+
+        profile = ReceptionistProfile(
+            restaurant=restaurant,
+            display_name="Concierge Lumière",
+            greeting="Bonjour, vous êtes en ligne avec Concierge Lumière du Bistrot Démo. Quelle expérience puis-je orchestrer pour vous ?",
+            closing_remark="Merci de votre confiance. Toute l'équipe du Bistrot Démo se réjouit de vous servir prochainement.",
+            tone="Chaleureux, précis et haute couture",
+            personality=(
+                "Reste attentif aux préférences, propose des recommandations sur-mesure et crée un sentiment de service cinq étoiles."
+            ),
+            primary_language="fr-FR",
+            secondary_language="en-US",
+            voice_name="alice",
+            upsell_phrases=[
+                "Proposer notre menu dégustation saisonnier",
+                "Mettre en avant le dessert signature praliné-citron",
+                "Suggérer l'accord mets & vins premium",
+            ],
+            signature="Concierge Lumière",
+            custom_instructions=(
+                "Toujours confirmer l'heure, le nombre de convives ou les détails de livraison. "
+                "Si le client hésite, propose deux options concrètes et rassurantes."
+            ),
+            brand_primary_color="#7060FF",
+            brand_accent_color="#38E8FF",
+            brand_background_color="#050713",
+            brand_text_color="#F5F7FF",
         )
 
         starters = MenuCategory(name="Entrées", restaurant=restaurant)
@@ -179,6 +208,7 @@ def seed_demo_data(session: Optional[Session] = None, *, skip_existing: bool = T
         session.add_all(
             [
                 restaurant,
+                profile,
                 plan,
                 subscription,
                 reservation,
@@ -219,6 +249,7 @@ def _purge_existing(session: Session) -> None:
             CallSession,
             MenuItem,
             MenuCategory,
+            ReceptionistProfile,
             Restaurant,
         ):
             session.query(model).delete()

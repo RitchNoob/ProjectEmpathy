@@ -10,6 +10,7 @@ Project Empathy est une plate-forme SaaS destinée aux restaurateurs. Elle conne
 - **Prise de commandes et réservations** : stockage structuré, calcul des montants, suivi du statut et enregistrement du contexte d'appel.
 - **Abonnements Flexprice/Stripe** : synchronisation de plans, suivi des crédits, blocage des fonctionnalités en cas de dépassement.
 - **Dashboard restaurateur** : statistiques (nombre d'appels, commandes, panier moyen, CA) exposées via API pour un tableau de bord statique prêt à l'emploi.
+- **Designer du réceptionniste** : profil IA par restaurant avec tonalité, langues, phrases d'upsell et palette personnalisables depuis le tableau de bord ou l'API.
 - **Clés API rotatives** : génération, rotation et révocation de jetons par restaurant pour sécuriser l'accès au tableau de bord et aux intégrations externes.
 - **Notifications webhook** : endpoints configurables par restaurant, signatures HMAC et suivi des livraisons pour intégrer Project Empathy avec Zapier, Slack, POS ou CRM.
 
@@ -115,13 +116,39 @@ En production, configurez PostgreSQL puis exécutez le script. SQLite reste prat
 
 L'interface prête à l'emploi se situe dans le dossier `dashboard/`. Elle est servie telle quelle par le script `start.py` ou n'importe quel serveur HTTP statique.
 
-- `index.html` : structure et sections (statistiques, menu, commandes, réservations)
-- `styles.css` : thème sombre premium avec glassmorphisme responsive
-- `app.js` : consommation des endpoints `/api/v1/...` avec la clé API de démonstration
+- `index.html` : structure et sections (statistiques, menu, commandes, réservations, designer du concierge)
+- `styles.css` : thème sombre premium en glassmorphisme, piloté par les couleurs de votre concierge
+- `app.js` : consommation des endpoints `/api/v1/...` avec la clé API de démonstration et synchronisation du profil IA
 
 La configuration générée (`dashboard/runtime-config.json`) indique l'URL de l'API et la clé à utiliser. Relancez `python start.py --reseed` pour régénérer la démo et le fichier de configuration.
 
 > Besoin de personnaliser le front ? Les sources React d'origine restent disponibles dans `frontend/` (nécessite Node.js 18+ et npm).
+
+### Personnaliser le concierge IA
+
+Chaque restaurant dispose désormais d'un profil « réceptionniste » stocké côté serveur. Il définit l'identité vocale et visuelle de l'agent : nom d'usage, message d'accueil, ton, langues maîtrisées, phrases d'upsell, instructions spécifiques et palette de couleurs. Deux façons de le modifier :
+
+1. **Depuis le tableau de bord statique** : le panneau « Designer du réceptionniste » propose un aperçu en temps réel (hero + carte mobile) et un formulaire complet. Les changements sont enregistrés via l'API et appliqués immédiatement aux thèmes et aux invites IA.
+2. **Via l'API REST** :
+
+   ```bash
+   curl -X PATCH \
+     -H "X-API-Key: <clé_api>" \
+     -H "Content-Type: application/json" \
+     http://localhost:8000/api/v1/restaurants/1/receptionist/profile \
+     -d '{
+       "display_name": "Concierge Lumière",
+       "tone": "Chaleureux et haute couture",
+       "upsell_phrases": [
+         "Mettre en avant notre dégustation saisonnière",
+         "Proposer l'accord mets & vins premium"
+       ],
+       "brand_primary_color": "#7060FF",
+       "brand_accent_color": "#38E8FF"
+     }'
+   ```
+
+   La réponse retourne l'objet `ReceptionistProfile` complet. Toute mise à jour s'applique automatiquement aux invites envoyées à l'IA (salutations, upsell, signature) ainsi qu'à l'expérience Twilio (greeting, langue et voix).
 
 ## Documentation API
 
