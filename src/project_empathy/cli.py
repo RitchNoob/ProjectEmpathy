@@ -189,16 +189,14 @@ def _create_token(restaurant_id: int, name: str) -> int:
 
 
 def _run_server(host: str, port: int, reload: bool) -> int:
-    try:
-        import uvicorn
-    except ImportError:  # pragma: no cover - only triggered when uvicorn absent
-        print("Uvicorn est requis pour lancer le serveur: pip install -r requirements.txt", file=sys.stderr)
-        return 1
+    if reload:
+        print("Le rechargement automatique n'est pas disponible dans l'exécutable clé en main.")
 
-    from .main import app
+    from .main import create_app
+    from .runtime.server import serve_app
+
     create_schema()
-
-    uvicorn.run(app, host=host, port=port, reload=reload)
+    serve_app(create_app(), host=host, port=port)
     return 0
 
 
@@ -219,15 +217,6 @@ def _launch_stack(
     reseed: bool,
     open_browser: bool,
 ) -> int:
-    try:
-        import uvicorn  # noqa: F401  # pragma: no cover - import guard for runtime env
-    except ImportError:
-        print(
-            "Uvicorn est requis pour lancer le serveur tout-en-un. Exécutez 'pip install -r requirements.txt'.",
-            file=sys.stderr,
-        )
-        return 1
-
     print("🚀 Préparation de l'environnement Project Empathy...")
     create_schema()
     seed_result = seed_demo_data(skip_existing=not reseed)
@@ -248,8 +237,7 @@ def _launch_stack(
     backend_cmd = [
         sys.executable,
         "-m",
-        "uvicorn",
-        "project_empathy.main:app",
+        "project_empathy.runtime.server",
         "--host",
         host,
         "--port",

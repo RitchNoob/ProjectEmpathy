@@ -55,7 +55,7 @@ Le script `start.py` appelle la commande `empathy launch` qui :
 - crée la base de données et les tables si nécessaire ;
 - recharge les données de démonstration et la clé API (stockée dans `data/demo_api_key.txt`) ;
 - génère le tableau de bord statique et sa configuration (`dashboard/runtime-config.json`) ;
-- démarre l'API FastAPI ainsi qu'un serveur web local pour le tableau de bord ;
+- démarre l'API FastAPI via le serveur HTTP intégré ainsi qu'un serveur web local pour le tableau de bord ;
 - ouvre automatiquement votre navigateur sur `http://localhost:5173`.
 
 Arrêtez l'application avec `Ctrl+C` dans le terminal. Pour repartir d'une base vierge, relancez `python start.py --reseed` ou utilisez la commande CLI `python -m project_empathy.cli launch --reseed`.
@@ -88,8 +88,10 @@ python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 cp config.example.yaml config.yaml  # puis éditer
-python -m project_empathy.cli runserver --reload
+python -m project_empathy.cli runserver
 ```
+
+Le serveur autonome s'appuie exclusivement sur la bibliothèque standard : aucune dépendance externe comme Uvicorn n'est requise, ce qui simplifie les déploiements hors ligne.
 
 ### Variables d'environnement
 
