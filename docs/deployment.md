@@ -15,7 +15,7 @@
    nano config.yaml  # renseigner les secrets
    ```
 
-   > 💡 Pour une démonstration locale rapide (sans Docker), exécutez simplement `python start.py` : la base est créée, la démo est
+   > 💡 Pour une démonstration locale rapide (sans Docker), exécutez simplement `python start.py` (ou double-cliquez sur `start.command` sur macOS) : la base est créée, la démo est
    > chargée et l'API + le tableau de bord se lancent automatiquement.
 
 3. **Configurer les variables d'environnement**

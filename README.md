@@ -44,7 +44,19 @@ project/
 
 ## Démarrage rapide (clé en main)
 
-Une fois Python 3.10+ et les dépendances installées (`pip install -r requirements.txt`), il suffit d'une seule commande pour tout lancer :
+### Utilisateurs macOS (double-clic)
+
+Un raccourci `start.command` est fourni à la racine du dépôt. Depuis le Finder :
+
+1. Copiez le dossier du projet où vous le souhaitez (Documents, Applications…).
+2. Double-cliquez sur `start.command`.
+3. Au premier lancement, le script crée automatiquement un environnement virtuel `.venv`, installe les dépendances listées dans `requirements.txt`, puis démarre l'application clé en main.
+
+Vous pouvez relancer `start.command` aussi souvent que nécessaire ; l'environnement est réutilisé et seule l'application est redémarrée. Les journaux d'exécution apparaissent dans la fenêtre Terminal ouverte par macOS.
+
+### Lancer manuellement via Python
+
+Une fois Python 3.10+ disponible, vous pouvez également démarrer Project Empathy depuis n'importe quel terminal :
 
 ```bash
 python start.py
