@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Project Empathy · Tableau de bord</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="hero">
+        <div class="hero__content">
+          <span class="hero__badge">Assistant IA pour restaurateurs</span>
+          <h1 id="restaurant-name">Project Empathy</h1>
+          <p id="restaurant-description">
+            Démarrez les appels intelligents, les commandes et les réservations en un clic.
+          </p>
+          <div class="hero__meta">
+            <div class="hero__meta-item">
+              <span class="hero__meta-label">Téléphone</span>
+              <span class="hero__meta-value" id="restaurant-phone">—</span>
+            </div>
+            <div class="hero__meta-item">
+              <span class="hero__meta-label">Adresse</span>
+              <span class="hero__meta-value" id="restaurant-address">—</span>
+            </div>
+          </div>
+        </div>
+        <div class="hero__glass">
+          <div class="hero__glass-content">
+            <h2>Configuration express</h2>
+            <ol>
+              <li>Appelez votre numéro Twilio connecté.</li>
+              <li>Laissez l'IA gérer commandes et réservations.</li>
+              <li>Retrouvez tout en temps réel ci-dessous.</li>
+            </ol>
+          </div>
+        </div>
+      </header>
+
+      <main class="main-content">
+        <section class="status" id="status">
+          <div class="status__message status__message--info" id="loading-message">
+            ⏳ Chargement du tableau de bord…
+          </div>
+          <div class="status__message status__message--error hidden" id="error-message"></div>
+          <div class="status__message status__message--success hidden" id="success-message">
+            ✅ Démo prête. Rafraîchissez cette page après vos appels pour voir les mises à jour.
+          </div>
+        </section>
+
+        <section class="stats-grid" id="stats-grid"></section>
+
+        <section class="content-grid">
+          <article class="card" id="menu-card">
+            <header class="card__header">
+              <div>
+                <h2>Menu du restaurant</h2>
+                <p>Articles mis en avant par l'agent conversationnel.</p>
+              </div>
+              <span class="card__badge" id="menu-count">0 articles</span>
+            </header>
+            <div class="card__body" id="menu-list"></div>
+          </article>
+
+          <article class="card" id="orders-card">
+            <header class="card__header">
+              <div>
+                <h2>Commandes récentes</h2>
+                <p>Suivez les ventes saisies via les appels.</p>
+              </div>
+              <span class="card__badge" id="orders-count">0 commande</span>
+            </header>
+            <div class="card__body" id="orders-list"></div>
+          </article>
+
+          <article class="card" id="reservations-card">
+            <header class="card__header">
+              <div>
+                <h2>Réservations à venir</h2>
+                <p>Les demandes confirmées par votre réceptionniste IA.</p>
+              </div>
+              <span class="card__badge" id="reservations-count">0 réservation</span>
+            </header>
+            <div class="card__body" id="reservations-list"></div>
+          </article>
+        </section>
+      </main>
+
+      <footer class="footer">
+        <div class="footer__left">
+          <strong>Project Empathy</strong>
+          <span class="dot">•</span>
+          <span id="footer-restaurant">Assistant IA restaurant</span>
+        </div>
+        <div class="footer__right">
+          <span>Contact support : <a href="mailto:support@projectempathy.test">support@projectempathy.test</a></span>
+        </div>
+      </footer>
+    </div>
+
+    <script src="app.js" defer></script>
+  </body>
+</html>

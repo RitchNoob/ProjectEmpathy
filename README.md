@@ -9,7 +9,7 @@ Project Empathy est une plate-forme SaaS destinée aux restaurateurs. Elle conne
 - **Gestion du menu** : CRUD complet pour catégories et plats, utilisé par l'IA et exposé dans le tableau de bord.
 - **Prise de commandes et réservations** : stockage structuré, calcul des montants, suivi du statut et enregistrement du contexte d'appel.
 - **Abonnements Flexprice/Stripe** : synchronisation de plans, suivi des crédits, blocage des fonctionnalités en cas de dépassement.
-- **Dashboard restaurateur** : statistiques (nombre d'appels, commandes, panier moyen, CA) exposées via API pour le front React.
+- **Dashboard restaurateur** : statistiques (nombre d'appels, commandes, panier moyen, CA) exposées via API pour un tableau de bord statique prêt à l'emploi.
 - **Clés API rotatives** : génération, rotation et révocation de jetons par restaurant pour sécuriser l'accès au tableau de bord et aux intégrations externes.
 - **Notifications webhook** : endpoints configurables par restaurant, signatures HMAC et suivi des livraisons pour intégrer Project Empathy avec Zapier, Slack, POS ou CRM.
 
@@ -27,7 +27,8 @@ project/
 │   ├── api/                   # Routes FastAPI v1
 │   ├── ai/assistant.py        # Orchestrateur OpenAI
 │   └── billing/flexprice.py   # Client Flexprice minimal
-├── frontend/                  # Tableau de bord React
+├── dashboard/                 # Tableau de bord statique clé en main
+├── frontend/                  # (Optionnel) source React originale
 ├── tests/                     # Tests Pytest des endpoints principaux
 ├── config.example.yaml        # Exemple de configuration
 ├── requirements.txt           # Dépendances backend
@@ -37,13 +38,12 @@ project/
 ## Prérequis
 
 - Python 3.10+
-- Node.js 18+ (pour le front)
 - PostgreSQL (prod) ou SQLite (développement)
 - Comptes Twilio, OpenAI/Mistral et Flexprice/Stripe
 
 ## Démarrage rapide (clé en main)
 
-Une fois Python 3.10+, Node.js 18+ et les dépendances Python installées (`pip install -r requirements.txt`), il suffit d'une seule commande pour tout lancer :
+Une fois Python 3.10+ et les dépendances installées (`pip install -r requirements.txt`), il suffit d'une seule commande pour tout lancer :
 
 ```bash
 python start.py
@@ -53,9 +53,9 @@ Le script `start.py` appelle la commande `empathy launch` qui :
 
 - crée la base de données et les tables si nécessaire ;
 - recharge les données de démonstration et la clé API (stockée dans `data/demo_api_key.txt`) ;
-- installe automatiquement les dépendances front-end (`npm install` si besoin) ;
-- démarre l'API FastAPI ainsi que le serveur Vite du tableau de bord ;
-- ouvre votre navigateur sur `http://localhost:5173`.
+- génère le tableau de bord statique et sa configuration (`dashboard/runtime-config.json`) ;
+- démarre l'API FastAPI ainsi qu'un serveur web local pour le tableau de bord ;
+- ouvre automatiquement votre navigateur sur `http://localhost:5173`.
 
 Arrêtez l'application avec `Ctrl+C` dans le terminal. Pour repartir d'une base vierge, relancez `python start.py --reseed` ou utilisez la commande CLI `python -m project_empathy.cli launch --reseed`.
 
@@ -111,17 +111,17 @@ python scripts/init_db.py
 
 En production, configurez PostgreSQL puis exécutez le script. SQLite reste pratique pour les tests locaux.
 
-## Front-end React
+## Tableau de bord web
 
-Le tableau de bord se trouve dans `frontend/` et a été généré avec Vite.
+L'interface prête à l'emploi se situe dans le dossier `dashboard/`. Elle est servie telle quelle par le script `start.py` ou n'importe quel serveur HTTP statique.
 
-```bash
-cd frontend
-npm install
-npm run dev
-```
+- `index.html` : structure et sections (statistiques, menu, commandes, réservations)
+- `styles.css` : thème sombre premium avec glassmorphisme responsive
+- `app.js` : consommation des endpoints `/api/v1/...` avec la clé API de démonstration
 
-Le front consomme les endpoints `/api/v1/...` (voir documentation ci-dessous).
+La configuration générée (`dashboard/runtime-config.json`) indique l'URL de l'API et la clé à utiliser. Relancez `python start.py --reseed` pour régénérer la démo et le fichier de configuration.
+
+> Besoin de personnaliser le front ? Les sources React d'origine restent disponibles dans `frontend/` (nécessite Node.js 18+ et npm).
 
 ## Documentation API
 

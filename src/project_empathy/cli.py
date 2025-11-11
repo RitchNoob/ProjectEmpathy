@@ -11,7 +11,6 @@ import sys
 import threading
 import time
 import webbrowser
-import shutil
 from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
@@ -60,7 +59,7 @@ def build_parser() -> argparse.ArgumentParser:
     launch_parser.add_argument(
         "--frontend-host",
         default="127.0.0.1",
-        help="Hôte pour le serveur Vite du tableau de bord",
+        help="Hôte pour le serveur web du tableau de bord",
     )
     launch_parser.add_argument(
         "--frontend-port",
@@ -229,13 +228,6 @@ def _launch_stack(
         )
         return 1
 
-    if not _npm_available():
-        print(
-            "npm est nécessaire pour démarrer le tableau de bord. Installez Node.js 18+.",
-            file=sys.stderr,
-        )
-        return 1
-
     print("🚀 Préparation de l'environnement Project Empathy...")
     create_schema()
     seed_result = seed_demo_data(skip_existing=not reseed)
@@ -250,14 +242,9 @@ def _launch_stack(
     else:
         print("⚠️ Impossible de déterminer la clé API de démonstration. Générez-en une via 'create-token'.")
 
-    try:
-        _ensure_frontend_dependencies()
-    except subprocess.CalledProcessError as exc:  # pragma: no cover - executed when npm install fails
-        print("❌ Échec lors de l'installation des dépendances front-end", file=sys.stderr)
-        return exc.returncode or 1
-
     project_root = _project_root()
-    frontend_dir = project_root / "frontend"
+    frontend_dir = project_root / "dashboard"
+    _write_frontend_config(frontend_dir, api_url=f"http://{host}:{port}", api_key=api_key, restaurant_id=seed_result.restaurant_id)
     backend_cmd = [
         sys.executable,
         "-m",
@@ -269,14 +256,12 @@ def _launch_stack(
         str(port),
     ]
     frontend_cmd = [
-        "npm",
-        "run",
-        "dev",
-        "--",
-        "--host",
-        frontend_host,
-        "--port",
+        sys.executable,
+        "-m",
+        "http.server",
         str(frontend_port),
+        "--bind",
+        frontend_host,
     ]
 
     processes = [
@@ -319,17 +304,17 @@ def _project_root() -> Path:
     return Path(__file__).resolve().parent.parent.parent
 
 
-def _npm_available() -> bool:
-    return shutil.which("npm") is not None
-
-
-def _ensure_frontend_dependencies() -> None:
-    frontend_dir = _project_root() / "frontend"
-    node_modules = frontend_dir / "node_modules"
-    if node_modules.exists():
-        return
-    print("📦 Installation des dépendances front-end (npm install)...")
-    subprocess.run(["npm", "install"], cwd=frontend_dir, check=True)
+def _write_frontend_config(frontend_dir: Path, *, api_url: str, api_key: Optional[str], restaurant_id: Optional[int]) -> None:
+    frontend_dir.mkdir(parents=True, exist_ok=True)
+    config = {
+        "apiBaseUrl": api_url,
+    }
+    if restaurant_id is not None:
+        config["restaurantId"] = restaurant_id
+    if api_key:
+        config["apiKey"] = api_key
+    config_path = frontend_dir / "runtime-config.json"
+    config_path.write_text(json.dumps(config, indent=2, ensure_ascii=False), encoding="utf-8")
 
 
 def _start_processes(processes: Sequence[ManagedProcess]) -> None:
