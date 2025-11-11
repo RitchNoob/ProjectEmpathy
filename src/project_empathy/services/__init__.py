@@ -6,6 +6,7 @@ from .notifications import (
     get_notification_dispatcher,
 )
 from .orders import create_order, mark_order_status
+from .receptionist import build_profile_preview
 from .statistics import compute_dashboard_stats
 from .subscriptions import ensure_active_subscription, record_usage, sync_subscription_plan
 # Telephony helpers rely on the external Twilio dependency which isn't available in
@@ -32,6 +33,7 @@ __all__ = [
     "dispatch_notification",
     "get_notification_dispatcher",
     "NotificationDispatcher",
+    "build_profile_preview",
     "TwilioCallContext",
     "build_greeting_response",
     "handle_transcription",

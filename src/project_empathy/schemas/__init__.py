@@ -138,6 +138,19 @@ class ReceptionistProfileUpdate(BaseModel):
     brand_text_color: Optional[str] = Field(default=None, max_length=16)
 
 
+class ReceptionistPreview(BaseModel):
+    system_prompt: str
+    greeting: str
+    closing_remark: str
+    upsell_phrases: List[str] = Field(default_factory=list)
+    tone: str
+    voice_name: str
+    languages: List[str] = Field(default_factory=list)
+    signature: Optional[str] = None
+    persona: Optional[str] = None
+    custom_instructions: Optional[str] = None
+
+
 class OrderItemBase(BaseModel):
     menu_item_id: int
     quantity: int = Field(default=1, ge=1)

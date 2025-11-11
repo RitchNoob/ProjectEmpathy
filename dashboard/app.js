@@ -9,7 +9,16 @@ const state = {
   reservations: [],
   profile: null,
   profileOriginal: null,
+  preview: null,
+  profileDirty: false,
+  profileSaving: false,
 };
+
+const BASE_SYSTEM_PROMPT =
+  "Tu es un réceptionniste de restaurant serviable et professionnel. " +
+  "Salue chaque client, réponds en français, propose des ventes additionnelles et " +
+  "confirme les commandes avant de terminer la conversation. Pose des questions " +
+  "pour clarifier si nécessaire.";
 
 const dom = {
   loading: document.getElementById("loading-message"),
@@ -44,6 +53,17 @@ const dom = {
   profileFeedback: document.getElementById("profile-feedback"),
   profileSave: document.getElementById("profile-save"),
   profileReset: document.getElementById("profile-reset"),
+  profileDirtyIndicator: document.getElementById("profile-dirty-indicator"),
+  profilePlaybook: document.getElementById("profile-playbook"),
+  profilePrompt: document.getElementById("profile-preview-prompt"),
+  profileTone: document.getElementById("profile-preview-tone"),
+  profileVoice: document.getElementById("profile-preview-voice"),
+  profileLanguages: document.getElementById("profile-preview-languages"),
+  profileGreeting: document.getElementById("profile-preview-greeting"),
+  profileClosing: document.getElementById("profile-preview-closing"),
+  profileSignature: document.getElementById("profile-preview-signature"),
+  profileInstructionsContainer: document.getElementById("profile-preview-instructions-container"),
+  profileInstructions: document.getElementById("profile-preview-instructions"),
   inputs: {
     display_name: document.getElementById("profile-display-name"),
     greeting: document.getElementById("profile-greeting"),
@@ -115,13 +135,30 @@ async function bootstrapDashboard() {
       return null;
     });
 
-    const [stats, categories, menuItems, orders, reservations, profile] = await Promise.all([
+    const previewPromise = fetchApiJson(
+      `/restaurants/${state.restaurantId}/receptionist/preview`,
+      { headers }
+    ).catch((error) => {
+      console.warn("Impossible de charger l'aperçu réceptionniste", error);
+      return null;
+    });
+
+    const [
+      stats,
+      categories,
+      menuItems,
+      orders,
+      reservations,
+      profile,
+      preview,
+    ] = await Promise.all([
       fetchApiJson(`/restaurants/${state.restaurantId}/dashboard/stats`, { headers }),
       fetchApiJson(`/restaurants/${state.restaurantId}/menu/categories`, { headers }),
       fetchApiJson(`/restaurants/${state.restaurantId}/menu/items`, { headers }),
       fetchApiJson(`/restaurants/${state.restaurantId}/orders/`, { headers }),
       fetchApiJson(`/restaurants/${state.restaurantId}/reservations/`, { headers }),
       profilePromise,
+      previewPromise,
     ]);
 
     state.stats = stats;
@@ -137,6 +174,11 @@ async function bootstrapDashboard() {
       setProfileFormEnabled(true);
     } else if (dom.profilePanel) {
       dom.profilePanel.classList.add("hidden");
+    }
+
+    if (preview) {
+      state.preview = preview;
+      renderProfilePreview();
     }
 
     renderRestaurant();
@@ -167,6 +209,8 @@ function setupProfileForm() {
       handleProfileReset();
     });
   }
+  dom.profileForm.addEventListener("input", handleProfileInputChange);
+  dom.profileForm.addEventListener("change", handleProfileInputChange);
 }
 
 function buildHeaders(config) {
@@ -520,7 +564,78 @@ function renderProfileDesigner() {
   updatePersonaPreview(state.profile);
 }
 
-function updatePersonaPreview(profile) {
+function renderProfilePreview() {
+  if (!dom.profilePlaybook) {
+    return;
+  }
+  if (!state.preview) {
+    dom.profilePlaybook.classList.add("hidden");
+    return;
+  }
+
+  writeProfilePreview(state.preview);
+}
+
+function writeProfilePreview(preview) {
+  if (!dom.profilePlaybook || !preview) {
+    return;
+  }
+  dom.profilePlaybook.classList.remove("hidden");
+
+  if (dom.profilePrompt) {
+    dom.profilePrompt.textContent = preview.system_prompt || "";
+  }
+  if (dom.profileTone) {
+    dom.profileTone.textContent = preview.tone ? `Ton : ${preview.tone}` : "Ton : —";
+  }
+  if (dom.profileVoice) {
+    dom.profileVoice.textContent = preview.voice_name
+      ? `Voix : ${preview.voice_name}`
+      : "Voix : —";
+  }
+  if (dom.profileLanguages) {
+    const languages = Array.isArray(preview.languages) ? preview.languages.filter(Boolean) : [];
+    dom.profileLanguages.textContent = languages.length
+      ? `Langues : ${languages.join(" · ")}`
+      : "Langues : —";
+  }
+  if (dom.profileGreeting) {
+    dom.profileGreeting.textContent = preview.greeting || "";
+  }
+  if (dom.profileClosing) {
+    dom.profileClosing.textContent = preview.closing_remark || "";
+  }
+  if (dom.profileSignature) {
+    dom.profileSignature.textContent = preview.signature || "—";
+  }
+  if (dom.profileInstructionsContainer) {
+    dom.profileInstructionsContainer.classList.toggle(
+      "hidden",
+      !preview.custom_instructions,
+    );
+  }
+  if (dom.profileInstructions) {
+    dom.profileInstructions.textContent = preview.custom_instructions || "";
+  }
+}
+
+async function refreshProfilePreview(headers) {
+  if (!state.restaurantId || !headers) {
+    return;
+  }
+  try {
+    const preview = await fetchApiJson(
+      `/restaurants/${state.restaurantId}/receptionist/preview`,
+      { headers }
+    );
+    state.preview = preview;
+    renderProfilePreview();
+  } catch (error) {
+    console.warn("Impossible de rafraîchir l'aperçu réceptionniste", error);
+  }
+}
+
+function writePersonaPreview(profile) {
   if (!profile) {
     return;
   }
@@ -539,7 +654,8 @@ function updatePersonaPreview(profile) {
   dom.personaUpsell.textContent = `Mises en avant : ${upsellList}`;
 
   dom.personaCardName.textContent = profile.display_name || "Concierge Empathy";
-  dom.personaCardGreeting.textContent = profile.greeting || "Bienvenue, comment puis-je sublimer votre expérience ?";
+  dom.personaCardGreeting.textContent =
+    profile.greeting || "Bienvenue, comment puis-je sublimer votre expérience ?";
   dom.personaCardSignature.textContent = profile.signature || "—";
   dom.personaCardClosing.textContent = profile.closing_remark || "—";
   dom.personaCardUpsell.innerHTML = "";
@@ -555,8 +671,16 @@ function updatePersonaPreview(profile) {
     chip.textContent = "Misez sur vos best-sellers";
     dom.personaCardUpsell.appendChild(chip);
   }
+}
 
-  populateProfileForm(profile);
+function updatePersonaPreview(profile, options = { syncForm: true }) {
+  if (!profile) {
+    return;
+  }
+  writePersonaPreview(profile);
+  if (options.syncForm) {
+    populateProfileForm(profile);
+  }
 }
 
 function populateProfileForm(profile) {
@@ -579,6 +703,7 @@ function populateProfileForm(profile) {
   dom.inputs.brand_background_color.value = ensureColor(profile.brand_background_color, "#050713");
   dom.inputs.brand_text_color.value = ensureColor(profile.brand_text_color, "#f5f7ff");
   dom.inputs.signature.value = profile.signature || "";
+  setProfileDirty(false);
 }
 
 function ensureColor(value, fallback) {
@@ -598,10 +723,199 @@ function setProfileFormEnabled(enabled) {
   });
   if (dom.profileSave) {
     dom.profileSave.disabled = !enabled;
+    if (!enabled) {
+      dom.profileSave.textContent = "Enregistrer";
+    }
   }
   if (dom.profileReset) {
     dom.profileReset.disabled = !enabled;
   }
+  if (enabled) {
+    updateProfileSaveButton();
+  }
+}
+
+function handleProfileInputChange() {
+  if (!state.profile) {
+    return;
+  }
+  const snapshot = readProfileForm();
+  refreshPersonaPreviewFromSnapshot(snapshot);
+  const original = state.profileOriginal ? normalizeProfileForComparison(state.profileOriginal) : null;
+  const candidate = normalizeProfileForComparison(snapshot);
+  const previewDraft = buildPreviewFromData(snapshot);
+  if (previewDraft) {
+    writeProfilePreview(previewDraft);
+  }
+  const isDirty = !profilesEqual(candidate, original);
+  setProfileDirty(isDirty);
+}
+
+function refreshPersonaPreviewFromSnapshot(snapshot) {
+  if (!snapshot) {
+    return;
+  }
+  applyTheme(snapshot);
+  writePersonaPreview(snapshot);
+}
+
+function setProfileDirty(isDirty) {
+  state.profileDirty = Boolean(isDirty);
+  updateProfileSaveButton();
+  if (dom.profileDirtyIndicator) {
+    dom.profileDirtyIndicator.textContent = state.profileDirty
+      ? "Modifications non enregistrées"
+      : "Profil synchronisé";
+    dom.profileDirtyIndicator.classList.toggle("badge--attention", state.profileDirty);
+  }
+  if (!state.profileDirty) {
+    renderProfilePreview();
+  }
+}
+
+function updateProfileSaveButton() {
+  if (!dom.profileSave) {
+    return;
+  }
+  if (state.profileSaving) {
+    dom.profileSave.disabled = true;
+    dom.profileSave.textContent = "Enregistrement…";
+    return;
+  }
+  if (state.profileDirty) {
+    dom.profileSave.disabled = false;
+    dom.profileSave.textContent = "Enregistrer";
+  } else {
+    dom.profileSave.disabled = true;
+    dom.profileSave.textContent = "Profil à jour";
+  }
+}
+
+function normalizeProfileForComparison(profile) {
+  if (!profile) {
+    return {};
+  }
+  const array = Array.isArray(profile.upsell_phrases) ? profile.upsell_phrases : [];
+  return {
+    display_name: normalizeText(profile.display_name),
+    greeting: normalizeText(profile.greeting),
+    closing_remark: normalizeText(profile.closing_remark),
+    tone: normalizeText(profile.tone),
+    voice_name: normalizeText(profile.voice_name),
+    primary_language: normalizeText(profile.primary_language),
+    secondary_language: normalizeOptionalText(profile.secondary_language),
+    personality: normalizeText(profile.personality),
+    upsell_phrases: array.map((phrase) => phrase.trim()).filter(Boolean),
+    custom_instructions: normalizeOptionalText(profile.custom_instructions),
+    brand_primary_color: normalizeColorValue(profile.brand_primary_color),
+    brand_accent_color: normalizeColorValue(profile.brand_accent_color),
+    brand_background_color: normalizeColorValue(profile.brand_background_color),
+    brand_text_color: normalizeColorValue(profile.brand_text_color),
+    signature: normalizeOptionalText(profile.signature),
+  };
+}
+
+function normalizeText(value) {
+  return (value || "").trim();
+}
+
+function normalizeOptionalText(value) {
+  const trimmed = (value || "").trim();
+  return trimmed === "" ? null : trimmed;
+}
+
+function normalizeColorValue(value) {
+  if (!value) {
+    return "";
+  }
+  let hex = String(value).trim().toLowerCase();
+  if (!hex.startsWith("#")) {
+    hex = `#${hex}`;
+  }
+  if (hex.length === 4) {
+    hex = `#${hex[1]}${hex[1]}${hex[2]}${hex[2]}${hex[3]}${hex[3]}`;
+  }
+  return hex;
+}
+
+function profilesEqual(candidate, original) {
+  if (!original) {
+    return false;
+  }
+  const reference = JSON.stringify(original);
+  const value = JSON.stringify(candidate);
+  return value === reference;
+}
+
+function buildPreviewFromData(profile) {
+  if (!profile) {
+    return null;
+  }
+  const languages = [];
+  if (profile.primary_language) {
+    languages.push(profile.primary_language.trim());
+  }
+  if (profile.secondary_language) {
+    languages.push(profile.secondary_language.trim());
+  }
+  const upsell = Array.isArray(profile.upsell_phrases)
+    ? profile.upsell_phrases.map((phrase) => phrase.trim()).filter(Boolean)
+    : [];
+
+  return {
+    system_prompt: buildSystemPromptFromData(profile),
+    greeting: profile.greeting || "",
+    closing_remark: profile.closing_remark || "",
+    upsell_phrases: upsell,
+    tone: profile.tone || "",
+    voice_name: profile.voice_name || "",
+    languages,
+    signature: profile.signature || null,
+    custom_instructions: profile.custom_instructions || null,
+    persona: profile.display_name || null,
+  };
+}
+
+function buildSystemPromptFromData(profile) {
+  const parts = [BASE_SYSTEM_PROMPT];
+  if (profile.display_name) {
+    parts.push(`Présente-toi comme ${profile.display_name}.`);
+  }
+  if (profile.tone) {
+    parts.push(`Adopte un ton ${profile.tone}.`);
+  }
+  if (profile.personality) {
+    parts.push(profile.personality);
+  }
+  const primaryLanguage = profile.primary_language ? profile.primary_language.trim() : "";
+  const secondaryLanguage = profile.secondary_language ? profile.secondary_language.trim() : "";
+  if (primaryLanguage || secondaryLanguage) {
+    let languages = primaryLanguage || "fr-FR";
+    if (secondaryLanguage) {
+      languages = `${languages} (prioritaire) et ${secondaryLanguage} (secondaire)`;
+    }
+    parts.push(
+      `Réponds avec fluidité dans les langues suivantes : ${languages}. Favorise la langue demandée par le client.`,
+    );
+  }
+  const upsell = Array.isArray(profile.upsell_phrases)
+    ? profile.upsell_phrases.map((phrase) => phrase.trim()).filter(Boolean)
+    : [];
+  if (upsell.length) {
+    parts.push(
+      `Propose élégamment des ventes additionnelles pertinentes, par exemple : ${upsell.join("; ")}.`,
+    );
+  }
+  if (profile.custom_instructions) {
+    parts.push(profile.custom_instructions);
+  }
+  if (profile.closing_remark) {
+    parts.push(`Conclue en rappelant : ${profile.closing_remark}`);
+  }
+  if (profile.signature) {
+    parts.push(`Signe poliment en mentionnant : ${profile.signature}.`);
+  }
+  return parts.join(" ");
 }
 
 async function handleProfileSubmit(event) {
@@ -622,6 +936,8 @@ async function handleProfileSubmit(event) {
     state.profileOriginal = clone(updated);
     applyTheme(updated);
     updatePersonaPreview(updated);
+    await refreshProfilePreview(headers);
+    setProfileDirty(false);
     showProfileFeedback("Profil enregistré avec succès.", "success");
   } catch (error) {
     console.error("Erreur d'enregistrement du profil", error);
@@ -687,10 +1003,8 @@ function safeUpsell(value, fallback) {
 }
 
 function setProfileSaving(isSaving) {
-  if (dom.profileSave) {
-    dom.profileSave.disabled = isSaving;
-    dom.profileSave.textContent = isSaving ? "Enregistrement…" : "Enregistrer";
-  }
+  state.profileSaving = Boolean(isSaving);
+  updateProfileSaveButton();
 }
 
 function showProfileFeedback(message, variant) {

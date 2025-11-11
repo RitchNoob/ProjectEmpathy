@@ -50,7 +50,7 @@ def inbound_call() -> str:
     return build_greeting_response(_call_context.profile)
 
 
-_call_context = _create_call_context() if TwilioCallContext else None
+_call_context = None  # type: ignore[assignment]
 
 
 @router.post("/handle-input")

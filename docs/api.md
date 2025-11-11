@@ -67,6 +67,26 @@ Met à jour partiellement le profil (tous les champs sont optionnels dans la req
 }
 ```
 
+### GET `/restaurants/{id}/receptionist/preview`
+Génère le playbook conversationnel du concierge (invite système, résumés et tonalité). Idéal pour alimenter l'interface de personnalisation.
+
+```json
+{
+  "system_prompt": "Tu es un réceptionniste de restaurant serviable...",
+  "greeting": "Bienvenue au Bistrot Démo, je suis votre concierge virtuel.",
+  "closing_remark": "Merci pour votre appel, à très vite !",
+  "tone": "Chaleureux et haute couture",
+  "voice_name": "alice",
+  "languages": ["fr-FR", "en-US"],
+  "upsell_phrases": [
+    "Proposer le dessert signature",
+    "Suggérer l'accord mets & vins premium"
+  ],
+  "signature": "Votre concierge Project Empathy",
+  "custom_instructions": "Confirmer l'heure et proposer un dessert maison."
+}
+```
+
 ## Menu
 
 ### GET `/restaurants/{id}/menu/items`

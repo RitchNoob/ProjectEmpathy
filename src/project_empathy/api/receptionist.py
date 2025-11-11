@@ -7,7 +7,12 @@ from sqlalchemy.orm import Session
 
 from ..db import get_session
 from ..models import ReceptionistProfile, Restaurant
-from ..schemas import ReceptionistProfileRead, ReceptionistProfileUpdate
+from ..schemas import (
+    ReceptionistPreview,
+    ReceptionistProfileRead,
+    ReceptionistProfileUpdate,
+)
+from ..services.receptionist import build_profile_preview
 from .dependencies import require_authenticated_restaurant
 
 
@@ -51,6 +56,17 @@ def update_profile(
     session.add(profile)
     session.flush()
     return profile
+
+
+@router.get("/preview", response_model=ReceptionistPreview)
+def preview_profile(
+    restaurant: Restaurant = Depends(require_authenticated_restaurant),
+    session: Session = Depends(get_session),
+) -> dict[str, object]:
+    """Return a rich preview of the concierge behaviour for the UI."""
+
+    profile = _ensure_profile(session, restaurant)
+    return build_profile_preview(profile)
 
 
 __all__ = ["router"]

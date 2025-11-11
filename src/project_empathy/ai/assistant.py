@@ -4,7 +4,10 @@ from __future__ import annotations
 
 from typing import Any, Iterable, List
 
-import openai
+try:  # pragma: no cover - import guarded for sandbox environments without OpenAI SDK
+    import openai  # type: ignore
+except ModuleNotFoundError:  # pragma: no cover - exercised in offline tests
+    openai = None  # type: ignore[assignment]
 
 from ..config import get_settings
 
@@ -24,7 +27,7 @@ def _extract(profile: Any, attribute: str, default: Any = None) -> Any:
     return getattr(profile, attribute, default)
 
 
-def _build_system_prompt(profile: Any) -> str:
+def build_system_prompt(profile: Any) -> str:
     if profile is None:
         return BASE_PROMPT
 
@@ -77,7 +80,7 @@ def _build_system_prompt(profile: Any) -> str:
 
 
 def _build_messages(history: Iterable[dict], new_message: str, profile: Any) -> List[dict]:
-    messages = [{"role": "system", "content": _build_system_prompt(profile)}]
+    messages = [{"role": "system", "content": build_system_prompt(profile)}]
     messages.extend(history)
     messages.append({"role": "user", "content": new_message})
     return messages
@@ -90,6 +93,9 @@ def send_message(history: Iterable[dict], new_message: str, profile: Any | None 
     if not settings.openai.api_key:
         raise RuntimeError("OpenAI API key is not configured")
 
+    if openai is None:
+        raise RuntimeError("OpenAI SDK is not installed")
+
     openai.api_key = settings.openai.api_key
     response = openai.ChatCompletion.create(  # type: ignore[attr-defined]
         model=settings.openai.model,
@@ -100,4 +106,4 @@ def send_message(history: Iterable[dict], new_message: str, profile: Any | None 
     return response["choices"][0]["message"]["content"].strip()
 
 
-__all__ = ["send_message"]
+__all__ = ["send_message", "build_system_prompt"]

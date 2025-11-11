@@ -128,7 +128,7 @@ La configuration générée (`dashboard/runtime-config.json`) indique l'URL de l
 
 Chaque restaurant dispose désormais d'un profil « réceptionniste » stocké côté serveur. Il définit l'identité vocale et visuelle de l'agent : nom d'usage, message d'accueil, ton, langues maîtrisées, phrases d'upsell, instructions spécifiques et palette de couleurs. Deux façons de le modifier :
 
-1. **Depuis le tableau de bord statique** : le panneau « Designer du réceptionniste » propose un aperçu en temps réel (hero + carte mobile) et un formulaire complet. Les changements sont enregistrés via l'API et appliqués immédiatement aux thèmes et aux invites IA.
+1. **Depuis le tableau de bord statique** : le panneau « Designer du réceptionniste » combine aperçu en temps réel, badge de synchronisation et nouveau playbook conversationnel. Chaque modification de ton, de langues ou d'instructions régénère instantanément la palette, la carte mobile et le script IA prévisualisé.
 2. **Via l'API REST** :
 
    ```bash
@@ -148,7 +148,7 @@ Chaque restaurant dispose désormais d'un profil « réceptionniste » stocké
      }'
    ```
 
-   La réponse retourne l'objet `ReceptionistProfile` complet. Toute mise à jour s'applique automatiquement aux invites envoyées à l'IA (salutations, upsell, signature) ainsi qu'à l'expérience Twilio (greeting, langue et voix).
+   La réponse retourne l'objet `ReceptionistProfile` complet. Toute mise à jour s'applique automatiquement aux invites envoyées à l'IA (salutations, upsell, signature) ainsi qu'à l'expérience Twilio (greeting, langue et voix). Vous pouvez également interroger `GET /api/v1/restaurants/{id}/receptionist/preview` pour récupérer le script consolidé exposé dans le playbook du tableau de bord.
 
 ## Documentation API
 

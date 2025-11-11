@@ -14,6 +14,22 @@ def test_get_receptionist_profile(test_client, seeded_restaurant):
     assert payload["brand_primary_color"].startswith("#")
 
 
+def test_preview_receptionist_profile(test_client, seeded_restaurant):
+    restaurant_id = seeded_restaurant["id"]
+    headers = seeded_restaurant["headers"]
+
+    response = test_client.get(
+        f"/api/v1/restaurants/{restaurant_id}/receptionist/preview",
+        headers=headers,
+    )
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["system_prompt"].startswith("Tu es un réceptionniste")
+    assert payload["greeting"]
+    assert "Merci" in payload["closing_remark"]
+    assert payload["languages"] == ["fr-FR"]
+
+
 def test_update_receptionist_profile(test_client, seeded_restaurant):
     restaurant_id = seeded_restaurant["id"]
     headers = seeded_restaurant["headers"]
@@ -52,3 +68,15 @@ def test_update_receptionist_profile(test_client, seeded_restaurant):
     refreshed_payload = refreshed.json()
     assert refreshed_payload["display_name"] == "Concierge Nova"
     assert refreshed_payload["upsell_phrases"] == update["upsell_phrases"]
+
+    preview = test_client.get(
+        f"/api/v1/restaurants/{restaurant_id}/receptionist/preview",
+        headers=headers,
+    )
+    assert preview.status_code == 200
+    preview_payload = preview.json()
+    assert "Concierge Nova" in preview_payload["system_prompt"]
+    assert "Futuriste et chaleureux" in preview_payload["system_prompt"]
+    assert preview_payload["languages"] == ["fr-FR"]
+    assert preview_payload["upsell_phrases"] == update["upsell_phrases"]
+    assert preview_payload["custom_instructions"].startswith("Confirmer")

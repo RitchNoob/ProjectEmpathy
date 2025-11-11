@@ -64,32 +64,33 @@
 
         <section class="panel" id="profile-panel">
           <header class="panel__header">
-            <div>
-              <p class="panel__eyebrow">Personnalisation avancée</p>
-              <h2>Designer du réceptionniste</h2>
-              <p>Affinez le ton, la signature et les couleurs de votre concierge virtuel en temps réel.</p>
-            </div>
-            <div class="panel__actions">
-              <button class="button button--ghost" type="button" id="profile-reset">Réinitialiser</button>
-              <button class="button" type="submit" form="profile-form" id="profile-save">Enregistrer</button>
-            </div>
-          </header>
+          <div>
+            <p class="panel__eyebrow">Personnalisation avancée</p>
+            <h2>Designer du réceptionniste</h2>
+            <p>Affinez le ton, la signature et les couleurs de votre concierge virtuel en temps réel.</p>
+          </div>
+          <div class="panel__actions">
+            <span class="badge badge--muted" id="profile-dirty-indicator">Synchronisation…</span>
+            <button class="button button--ghost" type="button" id="profile-reset">Réinitialiser</button>
+            <button class="button" type="submit" form="profile-form" id="profile-save">Enregistrer</button>
+          </div>
+        </header>
 
-          <div class="profile-grid">
-            <article class="persona-card" id="persona-card">
-              <div class="persona-card__header">
-                <span class="persona-card__badge">Prévisualisation live</span>
-                <h3 class="persona-card__title" id="persona-card-name">Concierge Empathy</h3>
-              </div>
-              <p class="persona-card__greeting" id="persona-card-greeting"></p>
-              <div class="persona-card__details">
-                <p><strong>Signature :</strong> <span id="persona-card-signature">—</span></p>
-                <p><strong>Clôture :</strong> <span id="persona-card-closing">—</span></p>
-              </div>
-              <div class="persona-card__chips" id="persona-card-upsell"></div>
-            </article>
+        <div class="profile-grid">
+          <article class="persona-card" id="persona-card">
+            <div class="persona-card__header">
+              <span class="persona-card__badge">Prévisualisation live</span>
+              <h3 class="persona-card__title" id="persona-card-name">Concierge Empathy</h3>
+            </div>
+            <p class="persona-card__greeting" id="persona-card-greeting"></p>
+            <div class="persona-card__details">
+              <p><strong>Signature :</strong> <span id="persona-card-signature">—</span></p>
+              <p><strong>Clôture :</strong> <span id="persona-card-closing">—</span></p>
+            </div>
+            <div class="persona-card__chips" id="persona-card-upsell"></div>
+          </article>
 
-            <form class="profile-form" id="profile-form">
+          <form class="profile-form" id="profile-form">
               <div class="form-group">
                 <label for="profile-display-name">Nom du réceptionniste</label>
                 <input id="profile-display-name" name="display_name" type="text" maxlength="128" />
@@ -158,8 +159,41 @@
               </div>
               <p class="profile-feedback hidden" id="profile-feedback"></p>
             </form>
-          </div>
-        </section>
+
+          <article class="profile-playbook hidden" id="profile-playbook">
+            <div class="profile-playbook__header">
+              <span class="profile-playbook__badge">Playbook IA</span>
+              <h3>Playbook conversationnel</h3>
+              <p>Prévisualisez le script généré par l'assistant en fonction de vos réglages.</p>
+            </div>
+            <div class="profile-playbook__meta">
+              <span id="profile-preview-tone">Ton : —</span>
+              <span id="profile-preview-voice">Voix : —</span>
+              <span id="profile-preview-languages">Langues : —</span>
+            </div>
+            <div class="profile-playbook__section">
+              <h4>Accueil type</h4>
+              <p id="profile-preview-greeting">—</p>
+            </div>
+            <div class="profile-playbook__section">
+              <h4>Clôture</h4>
+              <p id="profile-preview-closing">—</p>
+            </div>
+            <div class="profile-playbook__section hidden" id="profile-preview-instructions-container">
+              <h4>Notes spécifiques</h4>
+              <p id="profile-preview-instructions"></p>
+            </div>
+            <div class="profile-playbook__section profile-playbook__section--signature">
+              <h4>Signature</h4>
+              <p id="profile-preview-signature">—</p>
+            </div>
+            <div class="profile-playbook__prompt-wrapper">
+              <h4>Brief IA</h4>
+              <pre class="profile-playbook__prompt" id="profile-preview-prompt"></pre>
+            </div>
+          </article>
+        </div>
+      </section>
 
         <section class="content-grid">
           <article class="card" id="menu-card">
