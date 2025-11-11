@@ -43,34 +43,21 @@ project/
 
 ## Démarrage rapide (clé en main)
 
-1. Créez et activez un environnement virtuel, installez les dépendances puis initialisez la base avec les données de démonstration :
+Une fois Python 3.10+, Node.js 18+ et les dépendances Python installées (`pip install -r requirements.txt`), il suffit d'une seule commande pour tout lancer :
 
-   ```bash
-   python -m venv .venv
-   source .venv/bin/activate
-   pip install -r requirements.txt
-   python -m project_empathy.cli init-db --seed-demo
-   ```
+```bash
+python start.py
+```
 
-   La commande imprime la clé API de démonstration et l'enregistre dans `data/demo_api_key.txt`. Conservez-la pour accéder au tableau de bord.
+Le script `start.py` appelle la commande `empathy launch` qui :
 
-2. Lancez le serveur d'API (inclut une vérification automatique des tables) :
+- crée la base de données et les tables si nécessaire ;
+- recharge les données de démonstration et la clé API (stockée dans `data/demo_api_key.txt`) ;
+- installe automatiquement les dépendances front-end (`npm install` si besoin) ;
+- démarre l'API FastAPI ainsi que le serveur Vite du tableau de bord ;
+- ouvre votre navigateur sur `http://localhost:5173`.
 
-   ```bash
-   python -m project_empathy.cli runserver --host 127.0.0.1 --port 8000
-   ```
-
-3. Dans un autre terminal, démarrez le tableau de bord React :
-
-   ```bash
-   cd frontend
-   npm install
-   npm run dev
-   ```
-
-4. Rendez-vous sur `http://localhost:5173`, collez la clé API démo dans la barre prévue puis sélectionnez le restaurant : les données (menu, commandes, réservations) s'affichent immédiatement.
-
-> Besoin de remettre la démo à zéro ? `python -m project_empathy.cli seed-demo --force` vide et recharge les données.
+Arrêtez l'application avec `Ctrl+C` dans le terminal. Pour repartir d'une base vierge, relancez `python start.py --reseed` ou utilisez la commande CLI `python -m project_empathy.cli launch --reseed`.
 
 ### Notifications temps réel
 

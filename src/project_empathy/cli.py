@@ -4,13 +4,22 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
+import signal
+import subprocess
 import sys
+import threading
+import time
+import webbrowser
+import shutil
 from contextlib import contextmanager
-from typing import Iterator, Optional
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Iterator, Optional, Sequence
 
 from sqlalchemy.orm import Session
 
-from .bootstrap import create_schema, seed_demo_data
+from .bootstrap import SeedResult, create_schema, seed_demo_data
 from .config import ApplicationSettings, get_settings
 from .db import SessionLocal
 from .models import Restaurant
@@ -41,6 +50,34 @@ def build_parser() -> argparse.ArgumentParser:
     server_parser.add_argument("--host", default="0.0.0.0")
     server_parser.add_argument("--port", type=int, default=8000)
     server_parser.add_argument("--reload", action="store_true", help="Active le rechargement auto (développement)")
+
+    launch_parser = subparsers.add_parser(
+        "launch",
+        help="Démarre automatiquement l'API, le front-end et charge la démo (clé en main)",
+    )
+    launch_parser.add_argument("--host", default="127.0.0.1", help="Hôte pour l'API FastAPI")
+    launch_parser.add_argument("--port", type=int, default=8000, help="Port pour l'API FastAPI")
+    launch_parser.add_argument(
+        "--frontend-host",
+        default="127.0.0.1",
+        help="Hôte pour le serveur Vite du tableau de bord",
+    )
+    launch_parser.add_argument(
+        "--frontend-port",
+        type=int,
+        default=5173,
+        help="Port du tableau de bord",
+    )
+    launch_parser.add_argument(
+        "--reseed",
+        action="store_true",
+        help="Réinitialise les données de démonstration avant le lancement",
+    )
+    launch_parser.add_argument(
+        "--no-browser",
+        action="store_true",
+        help="N'ouvre pas automatiquement le navigateur",
+    )
 
     token_parser = subparsers.add_parser("create-token", help="Génère une clé API pour un restaurant")
     token_parser.add_argument("restaurant_id", type=int, help="Identifiant du restaurant")
@@ -77,6 +114,16 @@ def main(argv: Optional[list[str]] = None) -> int:
 
     if args.command == "runserver":
         return _run_server(args.host, args.port, args.reload)
+
+    if args.command == "launch":
+        return _launch_stack(
+            host=args.host,
+            port=args.port,
+            frontend_host=args.frontend_host,
+            frontend_port=args.frontend_port,
+            reseed=args.reseed,
+            open_browser=not args.no_browser,
+        )
 
     if args.command == "create-token":
         return _create_token(args.restaurant_id, args.name)
@@ -154,6 +201,224 @@ def _run_server(host: str, port: int, reload: bool) -> int:
 
     uvicorn.run(app, host=host, port=port, reload=reload)
     return 0
+
+
+@dataclass
+class ManagedProcess:
+    name: str
+    command: Sequence[str]
+    cwd: Path
+    process: subprocess.Popen | None = None
+
+
+def _launch_stack(
+    *,
+    host: str,
+    port: int,
+    frontend_host: str,
+    frontend_port: int,
+    reseed: bool,
+    open_browser: bool,
+) -> int:
+    try:
+        import uvicorn  # noqa: F401  # pragma: no cover - import guard for runtime env
+    except ImportError:
+        print(
+            "Uvicorn est requis pour lancer le serveur tout-en-un. Exécutez 'pip install -r requirements.txt'.",
+            file=sys.stderr,
+        )
+        return 1
+
+    if not _npm_available():
+        print(
+            "npm est nécessaire pour démarrer le tableau de bord. Installez Node.js 18+.",
+            file=sys.stderr,
+        )
+        return 1
+
+    print("🚀 Préparation de l'environnement Project Empathy...")
+    create_schema()
+    seed_result = seed_demo_data(skip_existing=not reseed)
+    api_key = _obtain_demo_api_key(seed_result)
+    if seed_result.created:
+        print("✅ Données de démonstration chargées")
+    else:
+        print("ℹ️ Données existantes détectées. Utilisez --reseed pour les régénérer.")
+
+    if api_key:
+        print(f"🔑 Clé API de démonstration: {api_key}")
+    else:
+        print("⚠️ Impossible de déterminer la clé API de démonstration. Générez-en une via 'create-token'.")
+
+    try:
+        _ensure_frontend_dependencies()
+    except subprocess.CalledProcessError as exc:  # pragma: no cover - executed when npm install fails
+        print("❌ Échec lors de l'installation des dépendances front-end", file=sys.stderr)
+        return exc.returncode or 1
+
+    project_root = _project_root()
+    frontend_dir = project_root / "frontend"
+    backend_cmd = [
+        sys.executable,
+        "-m",
+        "uvicorn",
+        "project_empathy.main:app",
+        "--host",
+        host,
+        "--port",
+        str(port),
+    ]
+    frontend_cmd = [
+        "npm",
+        "run",
+        "dev",
+        "--",
+        "--host",
+        frontend_host,
+        "--port",
+        str(frontend_port),
+    ]
+
+    processes = [
+        ManagedProcess(name="API", command=backend_cmd, cwd=project_root),
+        ManagedProcess(name="Dashboard", command=frontend_cmd, cwd=frontend_dir),
+    ]
+
+    _start_processes(processes)
+    _install_signal_handlers(processes)
+
+    url = f"http://{frontend_host}:{frontend_port}" if frontend_host not in ("0.0.0.0", "::") else f"http://127.0.0.1:{frontend_port}"
+
+    if open_browser:
+        threading.Thread(target=_open_browser_after_delay, args=(url,), daemon=True).start()
+
+    print("")
+    print("🌐 Tableau de bord:", url)
+    print(f"📞 API FastAPI: http://{host}:{port}")
+    print("Appuyez sur Ctrl+C pour arrêter l'application.")
+
+    try:
+        while True:
+            for managed in processes:
+                proc = managed.process
+                if proc is None:
+                    continue
+                code = proc.poll()
+                if code is not None:
+                    print(f"❌ Le service {managed.name} s'est arrêté (code {code}).", file=sys.stderr)
+                    _terminate_processes(processes)
+                    return code or 1
+            time.sleep(0.5)
+    except KeyboardInterrupt:  # pragma: no cover - runtime behaviour
+        print("\nArrêt demandé, fermeture des services...")
+        _terminate_processes(processes)
+        return 0
+
+
+def _project_root() -> Path:
+    return Path(__file__).resolve().parent.parent.parent
+
+
+def _npm_available() -> bool:
+    return shutil.which("npm") is not None
+
+
+def _ensure_frontend_dependencies() -> None:
+    frontend_dir = _project_root() / "frontend"
+    node_modules = frontend_dir / "node_modules"
+    if node_modules.exists():
+        return
+    print("📦 Installation des dépendances front-end (npm install)...")
+    subprocess.run(["npm", "install"], cwd=frontend_dir, check=True)
+
+
+def _start_processes(processes: Sequence[ManagedProcess]) -> None:
+    env = os.environ.copy()
+    env.setdefault("PYTHONPATH", str(_project_root() / "src"))
+    for managed in processes:
+        managed.process = subprocess.Popen(
+            managed.command,
+            cwd=str(managed.cwd),
+            env=env,
+            text=True,
+            start_new_session=True,
+        )
+        print(f"▶️  {managed.name} lancé ({' '.join(map(str, managed.command))})")
+
+
+def _install_signal_handlers(processes: Sequence[ManagedProcess]) -> None:
+    def _handler(signum, _frame):  # pragma: no cover - signal handling during runtime
+        print(f"\nSignal {signum} reçu, arrêt en cours...")
+        _terminate_processes(processes)
+        sys.exit(0)
+
+    for sig_name in ("SIGINT", "SIGTERM"):
+        if hasattr(signal, sig_name):
+            signal.signal(getattr(signal, sig_name), _handler)
+
+
+def _terminate_processes(processes: Sequence[ManagedProcess]) -> None:
+    deadline = time.time() + 10
+    for managed in processes:
+        proc = managed.process
+        if proc is not None and proc.poll() is None:
+            proc.terminate()
+
+    while time.time() < deadline:
+        if all(managed.process is None or managed.process.poll() is not None for managed in processes):
+            break
+        time.sleep(0.2)
+
+    for managed in processes:
+        proc = managed.process
+        if proc is not None and proc.poll() is None:
+            proc.kill()
+
+
+def _open_browser_after_delay(url: str, delay: float = 3.0) -> None:
+    time.sleep(delay)
+    try:
+        webbrowser.open(url)
+    except Exception:  # pragma: no cover - safety net for exotic environments
+        pass
+
+
+def _obtain_demo_api_key(seed_result: SeedResult) -> Optional[str]:
+    if seed_result.api_key:
+        _persist_demo_api_key(seed_result.api_key)
+        return seed_result.api_key
+
+    key = _load_demo_api_key()
+    if key:
+        return key
+
+    if seed_result.restaurant_id is None:
+        return None
+
+    with _session_scope() as session:
+        restaurant = session.get(Restaurant, seed_result.restaurant_id)
+        if restaurant is None:
+            return None
+        _, api_key = issue_api_token(session, restaurant, "Tableau de bord (auto)")
+        if api_key:
+            _persist_demo_api_key(api_key)
+        return api_key
+
+
+def _load_demo_api_key() -> Optional[str]:
+    settings = get_settings()
+    target = settings.storage.data_dir / "demo_api_key.txt"
+    if not target.exists():
+        return None
+    content = target.read_text(encoding="utf-8").strip()
+    return content or None
+
+
+def _persist_demo_api_key(api_key: str) -> None:
+    settings = get_settings()
+    target = settings.storage.data_dir / "demo_api_key.txt"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(api_key, encoding="utf-8")
 
 
 if __name__ == "__main__":  # pragma: no cover - module entry point
